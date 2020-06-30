@@ -5,9 +5,17 @@ import me.mattstudios.mf.annotations.Default
 import me.mattstudios.mf.base.CommandBase
 import net.md_5.bungee.api.ChatColor
 import net.md_5.bungee.api.chat.TextComponent
+import net.minecraft.server.v1_16_R1.ChatComponentText
+import net.minecraft.server.v1_16_R1.ChatMessage
+import net.minecraft.server.v1_16_R1.IChatBaseComponent
+import org.bukkit.Bukkit
+import org.bukkit.Color
 import org.bukkit.command.CommandSender
+import org.bukkit.craftbukkit.v1_16_R1.entity.CraftEntity
+import org.bukkit.craftbukkit.v1_16_R1.util.CraftChatMessage
 import org.bukkit.scheduler.BukkitRunnable
 import java.io.File
+import java.lang.StringBuilder
 import javax.imageio.ImageIO
 
 /**
@@ -19,8 +27,14 @@ class PlayCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
     // All the frames
     private val frames = mutableListOf<List<String>>()
 
+    private val armorStands = plugin.armorStands
+
     init {
-        loadFrames()
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, Runnable {
+            loadFrames()
+
+            Bukkit.broadcastMessage("Loaded!")
+        })
     }
 
     @Default
@@ -32,19 +46,23 @@ class PlayCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
 
             override fun run() {
 
+                val frame = frames[frameCounter]
+
                 // Cycles through the lines to send
-                for (line in frames[frameCounter]) {
+                for (i in frame.indices) {
                     // Uses spread operator cuz spigot's varargs
-                    sender.spigot().sendMessage(*TextComponent.fromLegacyText(line))
+                    val line = frame[frame.size - i - 1]
+
+                    val armorStand = (armorStands[i] as CraftEntity).handle
+                    armorStand.customName = CraftChatMessage.fromStringOrNull(line)
                 }
 
                 if (frameCounter == frames.size - 1) cancel()
 
                 frameCounter++
-
             }
 
-        }.runTaskTimer(plugin, 0L, 1L)
+        }.runTaskTimerAsynchronously(plugin, 0L, 1L)
 
     }
 
@@ -59,31 +77,22 @@ class PlayCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
         for (file in files) {
 
             // Loads the image and ignores non image files
-            val image = ImageIO.read(file) ?: continue
+            val image = ImageIO.read(file) ?: return
 
             val frame = mutableListOf<String>()
 
             // Cycles through the image pixels
             for (i in 0 until image.height) {
 
-                var line = ""
+                val builder = StringBuilder()
 
                 for (j in 0 until image.width) {
                     val color = image.getRGB(j, i)
-
-                    // Gets the color values
-                    val red = color and 0x00ff0000 shr 16
-                    val green = color and 0x0000ff00 shr 8
-                    val blue = color and 0x000000ff
-
-                    // Converts from RBG to hex
-                    val hex = java.lang.String.format("#%02x%02x%02x", red, green, blue)
-
-                    line += "${ChatColor.of(hex)}█"
+                    builder.append("${ChatColor.of("#" + Integer.toHexString(color).substring(2))}█")
 
                 }
 
-                frame.add(line)
+                frame.add(builder.toString())
             }
 
             frames.add(frame)
