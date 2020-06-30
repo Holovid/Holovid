@@ -13,9 +13,11 @@ import org.bukkit.Color
 import org.bukkit.command.CommandSender
 import org.bukkit.craftbukkit.v1_16_R1.entity.CraftEntity
 import org.bukkit.craftbukkit.v1_16_R1.util.CraftChatMessage
+import org.bukkit.entity.Player
 import org.bukkit.scheduler.BukkitRunnable
 import java.io.File
 import java.lang.StringBuilder
+import java.net.URL
 import javax.imageio.ImageIO
 
 /**
@@ -38,9 +40,9 @@ class PlayCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
     }
 
     @Default
-    fun command(sender: CommandSender) {
+    fun command(player: Player) {
 
-        object : BukkitRunnable() {
+        /*object : BukkitRunnable() {
 
             var frameCounter = 0
 
@@ -62,7 +64,7 @@ class PlayCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
                 frameCounter++
             }
 
-        }.runTaskTimerAsynchronously(plugin, 0L, 1L)
+        }.runTaskTimerAsynchronously(plugin, 0L, 1L)*/
 
     }
 
