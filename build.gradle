@@ -1,0 +1,81 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.3.72'
+    id 'com.github.johnrengelman.shadow' version '5.1.0'
+}
+
+
+allprojects {
+    apply plugin: 'org.jetbrains.kotlin.jvm'
+    apply plugin: 'java'
+
+    group = 'me.mattstudios'
+    version = '1.0'
+
+    repositories {
+        mavenCentral()
+        mavenLocal()
+
+        maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
+        maven { url = 'https://papermc.io/repo/repository/maven-public/' }
+
+    }
+
+    dependencies {
+
+        // Paper
+        compileOnly "com.destroystokyo.paper:paper-api:1.15.2-R0.1-SNAPSHOT"
+        compileOnly "net.md-5:bungeecord-chat:1.16-R0.1"
+
+        // My stuff
+        implementation "me.mattstudios.utils:matt-framework:1.4.3"
+
+        // Kotlin
+        implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+
+    }
+
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+
+    compileJava {
+        options.compilerArgs += ["-parameters"]
+        options.fork = true
+        options.forkOptions.executable = 'javac'
+        options.encoding = 'UTF-8'
+    }
+
+    compileKotlin {
+        kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8
+        kotlinOptions.javaParameters = true
+    }
+
+}
+
+apply plugin: 'com.github.johnrengelman.shadow'
+
+shadowJar {
+    clean
+
+    relocate("me.mattstudios.mf", "me.mattstudios.triumphpets.mf")
+
+    archiveFileName = "MinecraftChatVideo-${project.version}.jar"
+
+    destinationDir file("C:/Users/xpsyk/Desktop/servers/paper-1.16/plugins")
+}
+
+task buildToServer(type: Copy) {
+    from shadowJar
+    into "C:/Users/xpsyk/Desktop/servers/paper-1.16/plugins"
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+import org.apache.tools.ant.filters.ReplaceTokens
+
+processResources {
+    from(sourceSets.main.resources.srcDirs) {
+        filter ReplaceTokens, tokens: [version: version]
+    }
+}

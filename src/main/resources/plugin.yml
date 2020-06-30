@@ -1,0 +1,4 @@
+name: MinecraftChatVideo
+version: @version@
+main: me.mattstudios.minecraftchatvideo.MinecraftChatVideo
+api-version: 1.15
