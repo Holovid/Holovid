@@ -14,7 +14,9 @@ import java.net.URL
 
 class MinecraftChatVideo : JavaPlugin(), Listener {
 
+    // TODO this two need to get their own place
     val armorStands = mutableListOf<ArmorStand>()
+    val temporaryFrames = mutableListOf<List<String>>()
 
     override fun onEnable() {
         saveDefaultConfig()
@@ -35,6 +37,7 @@ class MinecraftChatVideo : JavaPlugin(), Listener {
         commandManager.register(LoadCommand(this))
     }
 
+    // TODO make a better way to start it
     @EventHandler
     fun BlockPlaceEvent.onBlockPlace() {
         if (block.type != Material.REDSTONE_BLOCK) return

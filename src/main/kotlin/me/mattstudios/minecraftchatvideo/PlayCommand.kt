@@ -27,22 +27,22 @@ import javax.imageio.ImageIO
 class PlayCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
 
     // All the frames
-    private val frames = mutableListOf<List<String>>()
+    private val frames = plugin.temporaryFrames
 
     private val armorStands = plugin.armorStands
 
     init {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, Runnable {
-            loadFrames()
+        /*Bukkit.getScheduler().runTaskAsynchronously(plugin, Runnable {
+            //loadFrames()
 
             Bukkit.broadcastMessage("Loaded!")
-        })
+        })*/
     }
 
     @Default
     fun command(player: Player) {
 
-        /*object : BukkitRunnable() {
+        object : BukkitRunnable() {
 
             var frameCounter = 0
 
@@ -64,14 +64,14 @@ class PlayCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
                 frameCounter++
             }
 
-        }.runTaskTimerAsynchronously(plugin, 0L, 1L)*/
+        }.runTaskTimerAsynchronously(plugin, 0L, 1L)
 
     }
 
     /**
      * Loads all the frames from the images folder
      */
-    private fun loadFrames() {
+    /*private fun loadFrames() {
         // Gets all the files in the images folder
         val files = File(plugin.dataFolder, "images").listFiles() ?: return
 
@@ -99,6 +99,6 @@ class PlayCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
 
             frames.add(frame)
         }
-    }
+    }*/
 
 }

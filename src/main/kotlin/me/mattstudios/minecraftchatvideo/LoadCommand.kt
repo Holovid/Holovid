@@ -7,12 +7,19 @@ import me.mattstudios.mf.annotations.Command
 import me.mattstudios.mf.annotations.Default
 import me.mattstudios.mf.base.CommandBase
 import me.mattstudios.minecraftchatvideo.Tasks.async
+import net.md_5.bungee.api.ChatColor
+import org.apache.commons.lang.StringUtils
+import org.bukkit.craftbukkit.libs.org.apache.commons.io.FilenameUtils
 import org.bukkit.entity.Player
 import org.jcodec.api.FrameGrab
 import org.jcodec.api.JCodecException
+import org.jcodec.common.io.NIOUtils
 import org.jcodec.scale.AWTUtil
+import java.awt.Image
+import java.awt.image.BufferedImage
 import java.io.File
 import java.io.IOException
+import java.lang.StringBuilder
 import java.net.URL
 import java.util.function.Consumer
 import javax.imageio.ImageIO
@@ -24,8 +31,8 @@ import javax.imageio.ImageIO
 @Command("loadvideo")
 class LoadCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
 
+    // Youtube downloader
     private val downloader = YoutubeDownloader()
-    private val regex = Regex("watch\\?v=(\\w+)")
 
     init {
         downloader.addCipherFunctionPattern(2, "\\b([a-zA-Z0-9$]{2})\\s*=\\s*function\\(\\s*a\\s*\\)\\s*\\{\\s*a\\s*=\\s*a\\.split\\(\\s*\"\"\\s*\\)")
@@ -36,38 +43,99 @@ class LoadCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
     @Default
     fun load(player: Player, videoUrl: URL) {
 
+        // Gets the video ID
         val id = videoUrl.query.substring(2)
 
         async {
             player.sendMessage("Downloading video...")
             val video = downloader.getVideo(id)
 
+            // Gets the video format and audio format
             val videoWithAudioFormats = video.videoWithAudioFormats()
+            val videoQuality = video.findVideoWithQuality(VideoQuality.tiny)
 
-            val videoFormats = video.findVideoWithQuality(VideoQuality.tiny)
             val outputDir = File(plugin.dataFolder, "videos")
 
-            val videoFile = video.download(videoWithAudioFormats[0], outputDir)
+            // Gets the format to use on the download (this one has been the only one to work so far)
+            val format = videoWithAudioFormats[0]
 
-            player.sendMessage("Resizing video...")
+            // Downloads the video into the videos dir
+            val videoFile = video.download(format, outputDir)
 
-            var count = 100
-            while (count-- > 0) {
-                println("Saving frame $count!")
-                saveFrame(videoFile, count)
+            player.sendMessage("Resizing and loading video...")
+
+            val fileName = videoFile.nameWithoutExtension.replace(" ", "_")
+
+            // Calculates how many frames the video has
+            val max = videoQuality[0].fps() * video.details().lengthSeconds()
+            var count = 0
+
+            // Starts the frame grabber
+            val grab = FrameGrab.createFrameGrab(NIOUtils.readableChannel(videoFile))
+            grab.seekToSecondPrecise(0.0)
+
+            // Cycles through all the frames and loads them
+            while (count++ < max) {
+                val frame = grab.seekToFramePrecise(count)
+                saveFrame(frame)
+
+                // Prints out every 20 frames
+                if (count % 20 == 0) println("Complete - ${count * 100 / max}%")
             }
+
+            player.sendMessage("Load complete!")
         }
 
     }
 
     @Throws(IOException::class, JCodecException::class)
-    fun saveFrame(file: File, frameNumber: Int): File {
-        val frame = FrameGrab.getFrameFromFile(file, frameNumber)
-        val tempFile = File(plugin.dataFolder, "/videos/frames" + File.separator + frameNumber + "frameVideo.png")
+    private fun saveFrame(frame: FrameGrab) {
+        val bufferedImage = AWTUtil.toBufferedImage(frame.nativeFrame)
+
+        loadFrame(resize(bufferedImage))
+
+        /*val tempFile = File(plugin.dataFolder, "/videos/$folderName/frame-$frameNumber.png")
+
         if (!tempFile.parentFile.exists()) tempFile.parentFile.mkdirs()
-        if (!tempFile.exists()) tempFile.createNewFile()
-        ImageIO.write(AWTUtil.toBufferedImage(frame), "png", tempFile)
-        return tempFile
+        if (!tempFile.exists()) tempFile.createNewFile()*/
+
+
+        //ImageIO.write(resize(bufferedImage), "png", tempFile)
+    }
+
+    private fun resize(bufferedImage: BufferedImage): BufferedImage {
+        val image = bufferedImage.getScaledInstance(128, 72, Image.SCALE_SMOOTH)
+        val bImage = BufferedImage(128, 72, BufferedImage.TYPE_INT_ARGB)
+
+        val graphics = bImage.createGraphics()
+        graphics.drawImage(image, 0, 0, null)
+        graphics.dispose()
+
+        return bImage
+    }
+
+    /**
+     * Loads all the frames from the images folder
+     */
+    private fun loadFrame(image: BufferedImage) {
+
+        val frame = mutableListOf<String>()
+
+        // Cycles through the image pixels
+        for (i in 0 until image.height) {
+
+            val builder = StringBuilder()
+
+            for (j in 0 until image.width) {
+                val color = image.getRGB(j, i)
+                builder.append("${ChatColor.of("#" + Integer.toHexString(color).substring(2))}█")
+
+            }
+
+            frame.add(builder.toString())
+        }
+
+        plugin.temporaryFrames.add(frame)
     }
 
 
