@@ -1,28 +1,21 @@
 package me.mattstudios.minecraftchatvideo
 
 import com.github.kiulian.downloader.YoutubeDownloader
-import com.github.kiulian.downloader.model.formats.AudioVideoFormat
 import com.github.kiulian.downloader.model.quality.VideoQuality
 import me.mattstudios.mf.annotations.Command
 import me.mattstudios.mf.annotations.Default
 import me.mattstudios.mf.base.CommandBase
 import me.mattstudios.minecraftchatvideo.Tasks.async
+import net.coobird.thumbnailator.Thumbnails
 import net.md_5.bungee.api.ChatColor
-import org.apache.commons.lang.StringUtils
-import org.bukkit.craftbukkit.libs.org.apache.commons.io.FilenameUtils
 import org.bukkit.entity.Player
 import org.jcodec.api.FrameGrab
-import org.jcodec.api.JCodecException
 import org.jcodec.common.io.NIOUtils
 import org.jcodec.scale.AWTUtil
-import java.awt.Image
 import java.awt.image.BufferedImage
 import java.io.File
-import java.io.IOException
-import java.lang.StringBuilder
 import java.net.URL
-import java.util.function.Consumer
-import javax.imageio.ImageIO
+import kotlin.system.measureTimeMillis
 
 
 /**
@@ -45,7 +38,7 @@ class LoadCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
 
         // Gets the video ID
         val id = videoUrl.query.substring(2)
-
+        plugin.temporaryFrames.clear()
         async {
             player.sendMessage("Downloading video...")
             val video = downloader.getVideo(id)
@@ -64,8 +57,6 @@ class LoadCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
 
             player.sendMessage("Resizing and loading video...")
 
-            val fileName = videoFile.nameWithoutExtension.replace(" ", "_")
-
             // Calculates how many frames the video has
             val max = videoQuality[0].fps() * video.details().lengthSeconds()
             var count = 0
@@ -75,7 +66,7 @@ class LoadCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
             grab.seekToSecondPrecise(0.0)
 
             // Cycles through all the frames and loads them
-            while (count++ < max) {
+            while (count++ < (max - 1)) {
                 val frame = grab.seekToFramePrecise(count)
                 saveFrame(frame)
 
@@ -88,30 +79,22 @@ class LoadCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
 
     }
 
-    @Throws(IOException::class, JCodecException::class)
     private fun saveFrame(frame: FrameGrab) {
         val bufferedImage = AWTUtil.toBufferedImage(frame.nativeFrame)
 
-        loadFrame(resize(bufferedImage))
+        println("Resize took " + measureTimeMillis {
+            resize(bufferedImage)
+        } + "ms")
 
-        /*val tempFile = File(plugin.dataFolder, "/videos/$folderName/frame-$frameNumber.png")
+        val resized = resize(bufferedImage)
 
-        if (!tempFile.parentFile.exists()) tempFile.parentFile.mkdirs()
-        if (!tempFile.exists()) tempFile.createNewFile()*/
-
-
-        //ImageIO.write(resize(bufferedImage), "png", tempFile)
+        println("Load took " + measureTimeMillis {
+            loadFrame(resized)
+        } + "ms")
     }
 
     private fun resize(bufferedImage: BufferedImage): BufferedImage {
-        val image = bufferedImage.getScaledInstance(128, 72, Image.SCALE_SMOOTH)
-        val bImage = BufferedImage(128, 72, BufferedImage.TYPE_INT_ARGB)
-
-        val graphics = bImage.createGraphics()
-        graphics.drawImage(image, 0, 0, null)
-        graphics.dispose()
-
-        return bImage
+        return Thumbnails.of(bufferedImage).size(128, 72).asBufferedImage()
     }
 
     /**

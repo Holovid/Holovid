@@ -43,6 +43,7 @@ allprojects {
         implementation "org.jcodec:jcodec:0.2.3"
         implementation "org.jcodec:jcodec-android:0.2.3"
         implementation "org.jcodec:jcodec-javase:0.2.3"
+        implementation "net.coobird:thumbnailator:0.4.11"
 
     }
 
