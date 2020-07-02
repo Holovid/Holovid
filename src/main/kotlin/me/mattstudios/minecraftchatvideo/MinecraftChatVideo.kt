@@ -3,7 +3,6 @@ package me.mattstudios.minecraftchatvideo
 import me.mattstudios.mf.base.CommandManager
 import me.mattstudios.mf.base.components.TypeResult
 import org.apache.commons.validator.routines.UrlValidator
-import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.ArmorStand
 import org.bukkit.event.EventHandler
@@ -34,7 +33,7 @@ class MinecraftChatVideo : JavaPlugin(), Listener {
         }
 
         commandManager.register(PlayCommand(this))
-        commandManager.register(LoadCommand(this))
+        commandManager.register(DownloadCommand(this))
     }
 
     // TODO make a better way to start it

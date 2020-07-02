@@ -40,8 +40,8 @@ class PlayCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
     }
 
     @Default
-    fun command(player: Player) {
-
+    fun command(player: Player, folder: String) {
+        loadFrames(folder)
         object : BukkitRunnable() {
 
             var frameCounter = 0
@@ -71,13 +71,12 @@ class PlayCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
     /**
      * Loads all the frames from the images folder
      */
-    /*private fun loadFrames() {
+    private fun loadFrames(folder: String) {
         // Gets all the files in the images folder
-        val files = File(plugin.dataFolder, "images").listFiles() ?: return
+        val files = File(plugin.dataFolder, folder).listFiles()?.filter { it.extension.equals("jpg", true) } ?: return
 
         // Cycles through the files
-        for (file in files) {
-
+        for (file in files.sorted()) {
             // Loads the image and ignores non image files
             val image = ImageIO.read(file) ?: return
 
@@ -99,6 +98,6 @@ class PlayCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
 
             frames.add(frame)
         }
-    }*/
+    }
 
 }
