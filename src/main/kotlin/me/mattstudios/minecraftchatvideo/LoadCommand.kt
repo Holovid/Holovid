@@ -62,12 +62,9 @@ class LoadCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
 
             // Starts the frame grabber
             val grab = FrameGrab.createFrameGrab(NIOUtils.readableChannel(videoFile))
-            var picture: Picture
-            var count = 0
-            while (null != grab.nativeFrame.also { picture =  }) {
-                count++
-                loadFrame(resize(AWTUtil.toBufferedImage(picture)))
-                if (count % 100 == 0) println("Complete - ${count * 100 / max}%")
+            for (i in 0..max) {
+                loadFrame(resize(AWTUtil.toBufferedImage(grab.nativeFrame)))
+                if (i % 100 == 0) println("Complete - ${i * 100 / max}%")
             }
 
 //            // Cycles through all the frames and loads them
