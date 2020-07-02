@@ -3,22 +3,18 @@ package me.mattstudios.minecraftchatvideo
 import me.mattstudios.mf.annotations.Command
 import me.mattstudios.mf.annotations.Default
 import me.mattstudios.mf.base.CommandBase
+import net.coobird.thumbnailator.Thumbnails
 import net.md_5.bungee.api.ChatColor
-import net.md_5.bungee.api.chat.TextComponent
-import net.minecraft.server.v1_16_R1.ChatComponentText
-import net.minecraft.server.v1_16_R1.ChatMessage
-import net.minecraft.server.v1_16_R1.IChatBaseComponent
 import org.bukkit.Bukkit
-import org.bukkit.Color
-import org.bukkit.command.CommandSender
+import org.bukkit.craftbukkit.libs.org.apache.commons.io.FileUtils
 import org.bukkit.craftbukkit.v1_16_R1.entity.CraftEntity
 import org.bukkit.craftbukkit.v1_16_R1.util.CraftChatMessage
 import org.bukkit.entity.Player
 import org.bukkit.scheduler.BukkitRunnable
 import java.io.File
-import java.lang.StringBuilder
-import java.net.URL
+import java.io.IOException
 import javax.imageio.ImageIO
+
 
 /**
  * @author Matt
@@ -27,16 +23,21 @@ import javax.imageio.ImageIO
 class PlayCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
 
     // All the frames
-    private val frames = plugin.temporaryFrames
+    //private val frames = plugin.temporaryFrames
+    private val frames = mutableListOf<List<String>>()
+
+    private var data = mutableListOf<String>()
 
     private val armorStands = plugin.armorStands
 
     init {
-        /*Bukkit.getScheduler().runTaskAsynchronously(plugin, Runnable {
+        loadFromWebCam()
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, Runnable {
+            Bukkit.broadcastMessage("Loading..")
             //loadFrames()
 
             Bukkit.broadcastMessage("Loaded!")
-        })*/
+        })
     }
 
     @Default
@@ -48,7 +49,9 @@ class PlayCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
 
             override fun run() {
 
-                val frame = frames[frameCounter]
+                val frame = data
+
+                if (data.isEmpty()) return
 
                 // Cycles through the lines to send
                 for (i in frame.indices) {
@@ -61,17 +64,19 @@ class PlayCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
 
                 if (frameCounter == frames.size - 1) cancel()
 
+                loadFromWebCam()
                 frameCounter++
             }
 
         }.runTaskTimerAsynchronously(plugin, 0L, 1L)
 
+        //player.playSound(player.location, "lotr.audio", SoundCategory.MASTER, 1f, 1f)
     }
 
     /**
      * Loads all the frames from the images folder
      */
-    /*private fun loadFrames() {
+    private fun loadFrames() {
         // Gets all the files in the images folder
         val files = File(plugin.dataFolder, "images").listFiles() ?: return
 
@@ -91,7 +96,6 @@ class PlayCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
                 for (j in 0 until image.width) {
                     val color = image.getRGB(j, i)
                     builder.append("${ChatColor.of("#" + Integer.toHexString(color).substring(2))}█")
-
                 }
 
                 frame.add(builder.toString())
@@ -99,6 +103,45 @@ class PlayCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
 
             frames.add(frame)
         }
-    }*/
+    }
+
+    private fun loadFromWebCam() {
+        // Gets all the files in the images folder
+
+        // Loads the image being saved by the webcam app
+        val file = File(plugin.dataFolder, "/images/image.jpg")
+
+        // Useless attempt to fix the issue
+        val isFileUnlocked = try {
+            FileUtils.touch(file)
+            true
+        } catch (e: IOException) {
+            false
+        }
+        // This is part of it ^
+        if (!isFileUnlocked) return
+
+        if (!file.exists()) return
+        val imageRead = ImageIO.read(file) ?: return
+
+        val image = Thumbnails.of(imageRead).size(128, 72).asBufferedImage()
+
+        val frame = mutableListOf<String>()
+
+        // Cycles through the image pixels
+        for (i in 0 until image.height) {
+
+            val builder = StringBuilder()
+
+            for (j in 0 until image.width) {
+                val color = image.getRGB(j, i)
+                builder.append("${ChatColor.of("#" + Integer.toHexString(color).substring(2))}█")
+            }
+
+            frame.add(builder.toString())
+        }
+
+        data = frame
+    }
 
 }

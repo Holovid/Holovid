@@ -16,6 +16,10 @@ allprojects {
         mavenLocal()
         jcenter()
 
+        flatDir {
+            dirs 'libs'
+        }
+
         maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
         maven { url = 'https://papermc.io/repo/repository/maven-public/' }
         maven { url = 'https://jitpack.io' }
@@ -44,6 +48,11 @@ allprojects {
         implementation "org.jcodec:jcodec-android:0.2.3"
         implementation "org.jcodec:jcodec-javase:0.2.3"
         implementation "net.coobird:thumbnailator:0.4.11"
+
+        implementation "com.github.sarxos:webcam-capture:0.3.12"
+        implementation "net.coobird:thumbnailator:0.4.11"
+
+        implementation name: 'bridj-0.7.0'
 
     }
 
@@ -78,7 +87,7 @@ shadowJar {
 
 task buildToServer(type: Copy) {
     from shadowJar
-    into "C:/Users/xpsyk/Desktop/servers/paper-1.16/plugins"
+    into "T:/Projects/Triumph/minecraft-chat-video/server/plugins"
 }
 
 tasks.withType(JavaCompile) {

@@ -2,6 +2,7 @@ package me.mattstudios.minecraftchatvideo
 
 import com.github.kiulian.downloader.YoutubeDownloader
 import com.github.kiulian.downloader.model.quality.VideoQuality
+import com.github.sarxos.webcam.Webcam
 import me.mattstudios.mf.annotations.Command
 import me.mattstudios.mf.annotations.Default
 import me.mattstudios.mf.base.CommandBase
@@ -66,12 +67,12 @@ class LoadCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
             grab.seekToSecondPrecise(0.0)
 
             // Cycles through all the frames and loads them
-            while (count++ < (max - 1)) {
-                val frame = grab.seekToFramePrecise(count)
+            while (count++ < max) {
+                val frame = grab.seekToFramePrecise(count) ?: continue
                 saveFrame(frame)
 
                 // Prints out every 20 frames
-                if (count % 20 == 0) println("Complete - ${count * 100 / max}%")
+                //if (count % 20 == 0) println("Complete - ${count * 100 / max}%")
             }
 
             player.sendMessage("Load complete!")
@@ -82,15 +83,17 @@ class LoadCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
     private fun saveFrame(frame: FrameGrab) {
         val bufferedImage = AWTUtil.toBufferedImage(frame.nativeFrame)
 
-        println("Resize took " + measureTimeMillis {
-            resize(bufferedImage)
-        } + "ms")
+        val resized = resize(bufferedImage)
+
+        loadFrame(resized)
+
+        /*val tempFile = File(plugin.dataFolder, "/videos/$folderName/frame-$frameNumber.png")
 
         val resized = resize(bufferedImage)
 
         println("Load took " + measureTimeMillis {
             loadFrame(resized)
-        } + "ms")
+        } + "ms")*/
     }
 
     private fun resize(bufferedImage: BufferedImage): BufferedImage {
@@ -111,6 +114,7 @@ class LoadCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
 
             for (j in 0 until image.width) {
                 val color = image.getRGB(j, i)
+
                 builder.append("${ChatColor.of("#" + Integer.toHexString(color).substring(2))}█")
 
             }
