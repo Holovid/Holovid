@@ -11,11 +11,11 @@ import net.md_5.bungee.api.ChatColor
 import org.bukkit.entity.Player
 import org.jcodec.api.FrameGrab
 import org.jcodec.common.io.NIOUtils
+import org.jcodec.common.model.Picture
 import org.jcodec.scale.AWTUtil
 import java.awt.image.BufferedImage
 import java.io.File
 import java.net.URL
-import kotlin.system.measureTimeMillis
 
 
 /**
@@ -56,23 +56,29 @@ class LoadCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
             val videoFile = video.download(format, outputDir)
 
             player.sendMessage("Resizing and loading video...")
-
-            // Calculates how many frames the video has
+//
+//            // Calculates how many frames the video has
             val max = videoQuality[0].fps() * video.details().lengthSeconds()
-            var count = 0
 
             // Starts the frame grabber
             val grab = FrameGrab.createFrameGrab(NIOUtils.readableChannel(videoFile))
-            grab.seekToSecondPrecise(0.0)
-
-            // Cycles through all the frames and loads them
-            while (count++ < (max - 1)) {
-                val frame = grab.seekToFramePrecise(count)
-                saveFrame(frame)
-
-                // Prints out every 20 frames
-                if (count % 20 == 0) println("Complete - ${count * 100 / max}%")
+            var picture: Picture
+            var count = 0
+            while (null != grab.nativeFrame.also { picture =  }) {
+                count++
+                loadFrame(resize(AWTUtil.toBufferedImage(picture)))
+                if (count % 100 == 0) println("Complete - ${count * 100 / max}%")
             }
+
+//            // Cycles through all the frames and loads them
+//            while (count++ < (max - 1)) {
+//                val picture
+//                val frame = grab.seekToFramePrecise(count)
+//                saveFrame(frame)
+//
+//                // Prints out every 20 frames
+//                if (count % 20 == 0) println("Complete - ${count * 100 / max}%")
+//            }
 
             player.sendMessage("Load complete!")
         }
@@ -80,17 +86,8 @@ class LoadCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
     }
 
     private fun saveFrame(frame: FrameGrab) {
-        val bufferedImage = AWTUtil.toBufferedImage(frame.nativeFrame)
-
-        println("Resize took " + measureTimeMillis {
-            resize(bufferedImage)
-        } + "ms")
-
-        val resized = resize(bufferedImage)
-
-        println("Load took " + measureTimeMillis {
-            loadFrame(resized)
-        } + "ms")
+//        val bufferedImage = AWTUtil.toBufferedImage(frame.nativeFrame)
+        loadFrame(AWTUtil.toBufferedImage(frame.nativeFrame))
     }
 
     private fun resize(bufferedImage: BufferedImage): BufferedImage {
