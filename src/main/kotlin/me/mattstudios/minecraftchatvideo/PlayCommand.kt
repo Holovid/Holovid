@@ -3,16 +3,17 @@ package me.mattstudios.minecraftchatvideo
 import me.mattstudios.mf.annotations.Command
 import me.mattstudios.mf.annotations.Default
 import me.mattstudios.mf.base.CommandBase
+import me.mattstudios.minecraftchatvideo.Tasks.async
 import net.coobird.thumbnailator.Thumbnails
 import net.md_5.bungee.api.ChatColor
 import org.bukkit.Bukkit
-import org.bukkit.craftbukkit.libs.org.apache.commons.io.FileUtils
 import org.bukkit.craftbukkit.v1_16_R1.entity.CraftEntity
 import org.bukkit.craftbukkit.v1_16_R1.util.CraftChatMessage
 import org.bukkit.entity.Player
 import org.bukkit.scheduler.BukkitRunnable
+import java.awt.Color
+import java.awt.image.BufferedImage
 import java.io.File
-import java.io.IOException
 import javax.imageio.ImageIO
 
 
@@ -26,18 +27,14 @@ class PlayCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
     //private val frames = plugin.temporaryFrames
     private val frames = mutableListOf<List<String>>()
 
-    private var data = mutableListOf<String>()
-
     private val armorStands = plugin.armorStands
 
     init {
-        loadFromWebCam()
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, Runnable {
+        async {
             Bukkit.broadcastMessage("Loading..")
-            //loadFrames()
-
+            loadFrames()
             Bukkit.broadcastMessage("Loaded!")
-        })
+        }
     }
 
     @Default
@@ -49,9 +46,7 @@ class PlayCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
 
             override fun run() {
 
-                val frame = data
-
-                if (data.isEmpty()) return
+                val frame = loadFromWebCam()//frames[frameCounter]
 
                 // Cycles through the lines to send
                 for (i in frame.indices) {
@@ -64,7 +59,6 @@ class PlayCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
 
                 if (frameCounter == frames.size - 1) cancel()
 
-                loadFromWebCam()
                 frameCounter++
             }
 
@@ -92,10 +86,32 @@ class PlayCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
             for (i in 0 until image.height) {
 
                 val builder = StringBuilder()
+                var firstPixel = false
+                var lastAlpha = 0
 
                 for (j in 0 until image.width) {
-                    val color = image.getRGB(j, i)
-                    builder.append("${ChatColor.of("#" + Integer.toHexString(color).substring(2))}█")
+                    val color = Color(image.getRGB(j, i), true)
+
+                    val alpha = color.alpha
+
+                    if (lastAlpha != 0 && alpha == 0) {
+                        if (checkIfLast(image, j, i)) break
+                    }
+
+                    if (alpha == 0) {
+
+                        if (!firstPixel) continue
+
+                        builder.append("  ")
+                        continue
+                    } else {
+                        firstPixel = true
+                    }
+
+                    lastAlpha = alpha
+                    val hex = java.lang.String.format("#%02x%02x%02x", color.red, color.green, color.blue)
+
+                    builder.append("${ChatColor.of(hex)}█")
                 }
 
                 frame.add(builder.toString())
@@ -105,24 +121,28 @@ class PlayCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
         }
     }
 
-    private fun loadFromWebCam() {
+    private fun checkIfLast(image: BufferedImage, j: Int, i: Int): Boolean {
+        for (k in j..image.width) {
+            val color = Color(image.getRGB(j, i), true)
+
+            val alpha = color.alpha
+
+            if (alpha != 0) return false
+        }
+
+        return true
+    }
+
+    private fun loadFromWebCam(): List<String> {
         // Gets all the files in the images folder
 
         // Loads the image being saved by the webcam app
-        val file = File(plugin.dataFolder, "/images/image.jpg")
+        val files = File(plugin.dataFolder, "images").listFiles() ?: return emptyList()
+        files.sort()
 
-        // Useless attempt to fix the issue
-        val isFileUnlocked = try {
-            FileUtils.touch(file)
-            true
-        } catch (e: IOException) {
-            false
-        }
-        // This is part of it ^
-        if (!isFileUnlocked) return
+        val file = files.first() ?: return emptyList()
 
-        if (!file.exists()) return
-        val imageRead = ImageIO.read(file) ?: return
+        val imageRead = ImageIO.read(file) ?: return emptyList()
 
         val image = Thumbnails.of(imageRead).size(128, 72).asBufferedImage()
 
@@ -141,7 +161,9 @@ class PlayCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
             frame.add(builder.toString())
         }
 
-        data = frame
+        file.delete()
+
+        return frame
     }
 
 }
