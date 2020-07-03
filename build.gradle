@@ -14,20 +14,21 @@ allprojects {
         mavenLocal()
         jcenter()
 
-        maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
         maven { url = 'https://papermc.io/repo/repository/maven-public/' }
         maven { url = 'https://jitpack.io' }
+        maven { url = 'http://repo.dmulloy2.net/nexus/repository/public/' }
 
     }
 
     dependencies {
 
         // Paper
-        compileOnly "com.destroystokyo.paper:paper-api:1.16.1-R0.1-SNAPSHOT"
-        // Chat color
-        compileOnly "net.md-5:bungeecord-chat:1.16-R0.1"
-        // NMS (for the armorstand)
-        compileOnly "org.spigotmc:spigot:1.16.1-R0.1-SNAPSHOT"
+        compileOnly "com.destroystokyo.paper:paper:1.16.1-R0.1-SNAPSHOT"
+        // ProtocolLib
+        compileOnly "com.comphenix.protocol:ProtocolLib:4.5.0"
+
+        // JetBrains annotations
+        compileOnly "org.jetbrains:annotations:19.0.0"
 
         // My stuff
         implementation "me.mattstudios.utils:matt-framework:1.4.3"

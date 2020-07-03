@@ -1,46 +1,49 @@
 package me.mattstudios.holovid;
 
-import me.mattstudios.mf.base.CommandManager;
-import me.mattstudios.mf.base.components.TypeResult;
+import com.google.common.base.Preconditions;
 import me.mattstudios.holovid.command.DownloadCommand;
 import me.mattstudios.holovid.command.PlayCommand;
+import me.mattstudios.holovid.command.SpawnScreenCommand;
+import me.mattstudios.holovid.command.StopCommand;
+import me.mattstudios.holovid.hologram.Hologram;
+import me.mattstudios.holovid.listener.HologramListener;
 import me.mattstudios.holovid.utils.Task;
+import me.mattstudios.mf.base.CommandManager;
+import me.mattstudios.mf.base.components.TypeResult;
 import org.apache.commons.validator.routines.UrlValidator;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.Location;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public final class Holovid extends JavaPlugin implements Listener {
+public final class Holovid extends JavaPlugin {
 
     private CommandManager commandManager;
+    private Hologram hologram;
+    private DisplayTask task;
 
-    // TODO this two need to get their own place
-    private final List<ArmorStand> armorStands = new ArrayList<>();
-    private final List<List<String>> temporaryFrames = new ArrayList<>();
+    private int displayHeight = 72;
+    private int displayWidth = 128;
 
     @Override
     public void onEnable() {
-        //saveDefaultConfig();
+        saveDefaultConfig();
+        displayHeight = getConfig().getInt("display-height", 72);
+        displayWidth = getConfig().getInt("display-witdh", 128);
 
         // Loads the tasks util
         Task.init(this);
 
         commandManager = new CommandManager(this);
 
-        getServer().getPluginManager().registerEvents(this, this);
+        getServer().getPluginManager().registerEvents(new HologramListener(this), this);
         registerCommands();
     }
 
@@ -70,37 +73,83 @@ public final class Holovid extends JavaPlugin implements Listener {
         // Registers all the commands
         Arrays.asList(
                 new DownloadCommand(this),
-                new PlayCommand(this)
+                new PlayCommand(this),
+                new SpawnScreenCommand(this),
+                new StopCommand(this)
         ).forEach(commandManager::register);
 
     }
 
-    // TODO remake this, this is temporary
-    @EventHandler
-    public void onBlockPlace(final BlockPlaceEvent event) {
-        final Block block = event.getBlock();
-        if (block.getType() != Material.REDSTONE_BLOCK) return;
+    public void spawnHologram(final Location location) {
+        // Despawn old holograms if present
+        despawnHologram();
 
-        double counter = 0.0;
+        // Lines are added when the actual images are displayed
+        hologram = new Hologram(displayHeight);
+        hologram.addLine();
+        hologram.spawn(location);
+    }
 
-        for (int i = 0; i < 72; i++) {
-            final ArmorStand armorStand = block.getWorld().spawn(block.getLocation().clone().add(0.0, counter, 0.0), ArmorStand.class, it -> {
-                it.setCustomName("█");
-                it.setCustomNameVisible(true);
-                it.setGravity(false);
-                it.setSmall(true);
-                it.setMarker(true);
-                it.setVisible(false);
-            });
-
-            counter += 0.225;
-
-            armorStands.add(armorStand);
+    public void despawnHologram() {
+        if (hologram != null) {
+            hologram.despawn();
+            hologram = null;
         }
     }
 
-    public List<ArmorStand> getArmorStands() {
-        return armorStands;
+    @Nullable
+    public Hologram getHologram() {
+        return hologram;
+    }
+
+    @Nullable
+    public DisplayTask getTask() {
+        return task;
+    }
+
+    public void startTask(final List<File> files, final int height, final int fps) {
+        Preconditions.checkNotNull(hologram);
+        stopTask();
+
+        if (hologram.getLines().size() < height) {
+            // Expand hologram
+            for (int i = hologram.getLines().size(); i < height; i++) {
+                hologram.addLine();
+            }
+        } else {
+            // Shorten it (just in case)
+            final int size = hologram.getLines().size();
+            for (int i = height; i < size; i++) {
+                hologram.removeLine(hologram.getLines().size() - 1);
+            }
+        }
+
+        this.task = new DisplayTask(this, files, fps);
+        getServer().getScheduler().runTaskAsynchronously(this, task);
+    }
+
+    /**
+     * Stops the display task if it is currently running.
+     *
+     * @return true if the task was running and has now been cancelled
+     */
+    public boolean stopTask() {
+        if (task == null) {
+            return false;
+        }
+
+        task.setRunning(false);
+        task = null;
+        return true;
+    }
+
+
+    public int getDisplayHeight() {
+        return displayHeight;
+    }
+
+    public int getDisplayWidth() {
+        return displayWidth;
     }
 
 }
