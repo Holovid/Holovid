@@ -1,35 +1,28 @@
 package me.mattstudios.holovid;
 
-import me.mattstudios.mf.base.CommandManager;
-import me.mattstudios.mf.base.components.TypeResult;
 import me.mattstudios.holovid.command.DownloadCommand;
 import me.mattstudios.holovid.command.PlayCommand;
+import me.mattstudios.holovid.hologram.Hologram;
+import me.mattstudios.holovid.listener.HologramListener;
 import me.mattstudios.holovid.utils.Task;
+import me.mattstudios.mf.base.CommandManager;
+import me.mattstudios.mf.base.components.TypeResult;
 import org.apache.commons.validator.routines.UrlValidator;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.Location;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.stream.Collectors;
 
-public final class Holovid extends JavaPlugin implements Listener {
+public final class Holovid extends JavaPlugin {
 
     private CommandManager commandManager;
-
-    // TODO this two need to get their own place
-    private final List<ArmorStand> armorStands = new ArrayList<>();
-    private final List<List<String>> temporaryFrames = new ArrayList<>();
+    private Hologram hologram;
 
     @Override
     public void onEnable() {
@@ -40,7 +33,7 @@ public final class Holovid extends JavaPlugin implements Listener {
 
         commandManager = new CommandManager(this);
 
-        getServer().getPluginManager().registerEvents(this, this);
+        getServer().getPluginManager().registerEvents(new HologramListener(this), this);
         registerCommands();
     }
 
@@ -75,32 +68,28 @@ public final class Holovid extends JavaPlugin implements Listener {
 
     }
 
-    // TODO remake this, this is temporary
-    @EventHandler
-    public void onBlockPlace(final BlockPlaceEvent event) {
-        final Block block = event.getBlock();
-        if (block.getType() != Material.REDSTONE_BLOCK) return;
+    public void spawnHologram(final Location location) {
+        // Despawn old holograms if present
+        despawnHologram();
 
-        double counter = 0.0;
-
+        hologram = new Hologram(72);
         for (int i = 0; i < 72; i++) {
-            final ArmorStand armorStand = block.getWorld().spawn(block.getLocation().clone().add(0.0, counter, 0.0), ArmorStand.class, it -> {
-                it.setCustomName("█");
-                it.setCustomNameVisible(true);
-                it.setGravity(false);
-                it.setSmall(true);
-                it.setMarker(true);
-                it.setVisible(false);
-            });
+            hologram.addLine();
+        }
 
-            counter += 0.225;
+        hologram.spawn(location);
+    }
 
-            armorStands.add(armorStand);
+    public void despawnHologram() {
+        if (hologram != null) {
+            hologram.despawn();
+            hologram = null;
         }
     }
 
-    public List<ArmorStand> getArmorStands() {
-        return armorStands;
+    @Nullable
+    public Hologram getHologram() {
+        return hologram;
     }
 
 }
