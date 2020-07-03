@@ -1,4 +1,4 @@
-name: MinecraftChatVideo
+name: Holovid
 version: @version@
-main: me.mattstudios.minecraftchatvideo.MinecraftChatVideo
-api-version: 1.15
+main: me.mattstudios.holovid.Holovid
+api-version: 1.16

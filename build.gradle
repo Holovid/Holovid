@@ -1,11 +1,9 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.3.72'
     id 'com.github.johnrengelman.shadow' version '5.1.0'
 }
 
 
 allprojects {
-    apply plugin: 'org.jetbrains.kotlin.jvm'
     apply plugin: 'java'
 
     group = 'me.mattstudios'
@@ -26,14 +24,13 @@ allprojects {
 
         // Paper
         compileOnly "com.destroystokyo.paper:paper-api:1.16.1-R0.1-SNAPSHOT"
+        // Chat color
         compileOnly "net.md-5:bungeecord-chat:1.16-R0.1"
+        // NMS (for the armorstand)
         compileOnly "org.spigotmc:spigot:1.16.1-R0.1-SNAPSHOT"
 
         // My stuff
         implementation "me.mattstudios.utils:matt-framework:1.4.3"
-
-        // Kotlin
-        implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 
         implementation "commons-validator:commons-validator:1.6"
 
@@ -56,18 +53,13 @@ allprojects {
         options.encoding = 'UTF-8'
     }
 
-    compileKotlin {
-        kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8
-        kotlinOptions.javaParameters = true
-    }
-
 }
 
 shadowJar {
     clean
 
     relocate("me.mattstudios.mf", "me.mattstudios.triumphpets.mf")
-    archiveFileName = "MinecraftChatVideo-${project.version}.jar"
+    archiveFileName = "Holovid-${project.version}.jar"
 }
 
 tasks.withType(JavaCompile) {
