@@ -6,14 +6,12 @@ import com.github.kiulian.downloader.model.YoutubeVideo;
 import com.github.kiulian.downloader.model.formats.AudioVideoFormat;
 import com.github.kiulian.downloader.model.formats.VideoFormat;
 import com.github.kiulian.downloader.model.quality.VideoQuality;
-import me.mattstudios.mf.annotations.Command;
-import me.mattstudios.mf.annotations.SubCommand;
-import me.mattstudios.mf.base.CommandBase;
 import me.mattstudios.holovid.Holovid;
 import me.mattstudios.holovid.utils.ImageUtils;
 import me.mattstudios.holovid.utils.Task;
-import net.md_5.bungee.api.ChatColor;
-import org.bukkit.craftbukkit.libs.org.apache.commons.io.FilenameUtils;
+import me.mattstudios.mf.annotations.Command;
+import me.mattstudios.mf.annotations.SubCommand;
+import me.mattstudios.mf.base.CommandBase;
 import org.bukkit.entity.Player;
 import org.jcodec.api.FrameGrab;
 import org.jcodec.api.JCodecException;
@@ -22,14 +20,10 @@ import org.jcodec.common.model.Picture;
 import org.jcodec.scale.AWTUtil;
 
 import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Command("holovid")
 public final class DownloadCommand extends CommandBase {
@@ -82,61 +76,22 @@ public final class DownloadCommand extends CommandBase {
 
                     if (frame == null) continue;
 
+                    //TODO parallelize grabbing the image vs. resizing/saving
                     ImageIO.write(ImageUtils.resize(AWTUtil.toBufferedImage(frame), 128, 72), "jpg", new File(outputDir.getPath() + "/frame-" + i + ".jpg"));
 
                     // Debug percent checker
-                    if (i % 100 == 0) player.sendMessage("Complete - " + i * 100 / max);
+                    if (i % 100 == 0) player.sendMessage("Complete - " + (i * 100 / max) + "%");
                 }
 
                 videoFile.delete();
 
                 player.sendMessage("Load complete!");
             } catch (YoutubeException | IOException | JCodecException e) {
+                player.sendMessage("Error downloading the video!");
                 e.printStackTrace();
             }
         });
 
-    }
-
-    /**
-     * TODO needs work, this is temporary
-     */
-    private void loadFrames(final String folder) throws IOException {
-        // Gets all the files in the images folder
-        final File[] folderFiles = new File(plugin.getDataFolder(), folder).listFiles();
-        if (folderFiles == null) return;
-
-        final List<File> files = Arrays.asList(folderFiles)
-                                       .parallelStream()
-                                       .filter(file -> FilenameUtils.getExtension(file.getName()).equalsIgnoreCase("jpg"))
-                                       .sorted()
-                                       .collect(Collectors.toList());
-
-        // Cycles through the files
-        for (final File file : files) {
-            // Loads the image and ignores non image files
-            final BufferedImage image = ImageIO.read(file);
-            if (image == null) continue;
-
-            final List<String> frame = new ArrayList<>();
-
-            // Cycles through the image pixels
-            for (int i = 0; i < image.getHeight(); i++) {
-
-                final StringBuilder builder = new StringBuilder();
-
-                for (int j = 0; j < image.getWidth(); j++) {
-                    final int color = image.getRGB(j, i);
-                    builder.append(ChatColor.of("#" + Integer.toHexString(color).substring(2)));
-                    builder.append("█");
-                }
-
-                frame.add(builder.toString());
-            }
-
-            // Would load here, but will comment it out for now
-            //plugin.temporaryFrames.add(frame);
-        }
     }
 
 }

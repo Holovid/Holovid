@@ -6,9 +6,7 @@ import me.mattstudios.mf.annotations.Command;
 import me.mattstudios.mf.annotations.Completion;
 import me.mattstudios.mf.annotations.SubCommand;
 import me.mattstudios.mf.base.CommandBase;
-import net.md_5.bungee.api.ChatColor;
 import org.bukkit.craftbukkit.libs.org.apache.commons.io.FilenameUtils;
-import org.bukkit.craftbukkit.v1_16_R1.util.CraftChatMessage;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -46,7 +44,7 @@ public final class PlayCommand extends CommandBase {
 
         new BukkitRunnable() {
 
-            int frameCounter = 0;
+            private int frameCounter;
 
             @Override
             public void run() {
@@ -61,9 +59,10 @@ public final class PlayCommand extends CommandBase {
                     hologramLine.updateText(line);
                 }
 
-                if (frameCounter == files.size() - 1) frameCounter = 0;
+                if (++frameCounter == files.size() - 1) {
+                    frameCounter = 0;
+                }
 
-                frameCounter++;
             }
 
         }.runTaskTimerAsynchronously(plugin, 0L, 1L);
@@ -74,18 +73,18 @@ public final class PlayCommand extends CommandBase {
 
         try {
             final BufferedImage image = ImageIO.read(file);
-            final List<String> frame = new ArrayList<>();
+            final List<String> frame = new ArrayList<>(image.getHeight());
 
             for (int i = 0; i < image.getHeight(); i++) {
 
-                final StringBuilder builder = new StringBuilder();
+                final StringBuilder builder = new StringBuilder("{\"text\":\"\",\"extra\":[");
 
                 for (int j = 0; j < image.getWidth(); j++) {
                     final int color = image.getRGB(j, i);
-                    builder.append(ChatColor.of("#" + Integer.toHexString(color).substring(2)));
-                    builder.append('█');
+                    builder.append("{\"color\":\"#").append(String.format("%06x", color & 0x00FFFFFF)).append("\",\"text\":\"█\"},");
                 }
 
+                builder.deleteCharAt(builder.length() - 1).append("]}");
                 frame.add(builder.toString());
             }
 

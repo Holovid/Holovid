@@ -2,6 +2,7 @@ package me.mattstudios.holovid;
 
 import me.mattstudios.holovid.command.DownloadCommand;
 import me.mattstudios.holovid.command.PlayCommand;
+import me.mattstudios.holovid.command.SpawnScreenCommand;
 import me.mattstudios.holovid.hologram.Hologram;
 import me.mattstudios.holovid.listener.HologramListener;
 import me.mattstudios.holovid.utils.Task;
@@ -63,7 +64,8 @@ public final class Holovid extends JavaPlugin {
         // Registers all the commands
         Arrays.asList(
                 new DownloadCommand(this),
-                new PlayCommand(this)
+                new PlayCommand(this),
+                new SpawnScreenCommand(this)
         ).forEach(commandManager::register);
 
     }
