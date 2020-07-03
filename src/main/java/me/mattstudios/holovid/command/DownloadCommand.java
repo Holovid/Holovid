@@ -95,7 +95,7 @@ public final class DownloadCommand extends CommandBase {
                 videoFile.delete();
 
                 player.sendMessage("Load complete!");
-            } catch (YoutubeException | IOException | JCodecException e) {
+            } catch (final YoutubeException | IOException | JCodecException e) {
                 player.sendMessage("Error downloading the video!");
                 e.printStackTrace();
             }

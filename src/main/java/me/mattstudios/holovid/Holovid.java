@@ -36,7 +36,7 @@ public final class Holovid extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         displayHeight = getConfig().getInt("display-height", 72);
-        displayWidth = getConfig().getInt("display-witdh", 128);
+        displayWidth = getConfig().getInt("display-width", 128);
 
         // Loads the tasks util
         Task.init(this);
@@ -45,6 +45,11 @@ public final class Holovid extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(new HologramListener(this), this);
         registerCommands();
+    }
+
+    @Override
+    public void onDisable() {
+        stopTask();
     }
 
     /**
