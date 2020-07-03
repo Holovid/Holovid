@@ -140,8 +140,30 @@ public final class Hologram {
      */
     public HologramLine addLine() {
         final HologramLine line = new HologramLine(this);
+        if (spawned) {
+            final PacketContainer spawnPacket = line.createSpawnPackets(baseLocation.clone().add(0, 0.225D * lines.size(), 0));
+            final PacketContainer metadataPacket = line.createMetadataPacket();
+            for (final Player player : viewers) {
+                distributePacket(player, spawnPacket);
+                distributePacket(player, metadataPacket);
+            }
+        }
         lines.add(line);
         return line;
+    }
+
+    /**
+     * Properly removes a line and despawns it for tracked players.
+     *
+     * @param index index
+     * @throws IndexOutOfBoundsException if the index is lower than 0 or bigger than the size of the lines array
+     */
+    public void removeLine(final int index) {
+        final HologramLine line = lines.remove(index);
+        if (spawned) {
+            final PacketContainer despawnPacket = line.createDespawnPacket();
+            distributePacket(despawnPacket);
+        }
     }
 
     public List<HologramLine> getLines() {

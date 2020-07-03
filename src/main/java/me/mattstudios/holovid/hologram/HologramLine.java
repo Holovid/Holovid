@@ -39,7 +39,7 @@ public final class HologramLine {
     public void updateText(final String jsonText) {
         final PacketContainer packetContainer = new PacketContainer(PacketType.Play.Server.ENTITY_METADATA);
         packetContainer.getIntegers().write(0, entityId);
-        final IChatBaseComponent component = IChatBaseComponent.ChatSerializer.jsonToComponent(jsonText);
+        final IChatBaseComponent component = IChatBaseComponent.ChatSerializer.a(jsonText);
         final List<WrappedWatchableObject> object = Collections.singletonList(
                 new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(2,
                         WrappedDataWatcher.Registry.getChatComponentSerializer(true)), Optional.ofNullable(component)));

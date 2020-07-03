@@ -12,6 +12,7 @@ import me.mattstudios.holovid.utils.Task;
 import me.mattstudios.mf.annotations.Command;
 import me.mattstudios.mf.annotations.SubCommand;
 import me.mattstudios.mf.base.CommandBase;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.jcodec.api.FrameGrab;
 import org.jcodec.api.JCodecException;
@@ -66,7 +67,8 @@ public final class DownloadCommand extends CommandBase {
                 player.sendMessage("Resizing and saving video...");
 
                 // Calculates how many frames the video has
-                final int max = videoQuality.get(0).fps() * video.details().lengthSeconds();
+                final int fps = videoQuality.get(0).fps();
+                final int max = fps * video.details().lengthSeconds();
 
                 // Starts the frame grabber
                 final FrameGrab grab = FrameGrab.createFrameGrab(NIOUtils.readableChannel(videoFile));
@@ -77,11 +79,18 @@ public final class DownloadCommand extends CommandBase {
                     if (frame == null) continue;
 
                     //TODO parallelize grabbing the image vs. resizing/saving
-                    ImageIO.write(ImageUtils.resize(AWTUtil.toBufferedImage(frame), 128, 72), "jpg", new File(outputDir.getPath() + "/frame-" + i + ".jpg"));
+                    ImageIO.write(ImageUtils.resize(AWTUtil.toBufferedImage(frame), plugin.getDisplayWidth(), plugin.getDisplayHeight()),
+                            "jpg", new File(outputDir.getPath() + "/frame-" + i + ".jpg"));
 
                     // Debug percent checker
                     if (i % 100 == 0) player.sendMessage("Complete - " + (i * 100 / max) + "%");
                 }
+
+                final YamlConfiguration dataConfig = new YamlConfiguration();
+                dataConfig.set("fps", fps);
+                dataConfig.set("height", plugin.getDisplayHeight());
+                dataConfig.set("width", plugin.getDisplayWidth());
+                dataConfig.save(new File(outputDir, "data.yml"));
 
                 videoFile.delete();
 

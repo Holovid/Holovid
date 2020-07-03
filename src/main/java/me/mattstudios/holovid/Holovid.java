@@ -1,8 +1,10 @@
 package me.mattstudios.holovid;
 
+import com.google.common.base.Preconditions;
 import me.mattstudios.holovid.command.DownloadCommand;
 import me.mattstudios.holovid.command.PlayCommand;
 import me.mattstudios.holovid.command.SpawnScreenCommand;
+import me.mattstudios.holovid.command.StopCommand;
 import me.mattstudios.holovid.hologram.Hologram;
 import me.mattstudios.holovid.listener.HologramListener;
 import me.mattstudios.holovid.utils.Task;
@@ -18,16 +20,23 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public final class Holovid extends JavaPlugin {
 
     private CommandManager commandManager;
     private Hologram hologram;
+    private DisplayTask task;
+
+    private int displayHeight = 72;
+    private int displayWidth = 128;
 
     @Override
     public void onEnable() {
-        //saveDefaultConfig();
+        saveDefaultConfig();
+        displayHeight = getConfig().getInt("display-height", 72);
+        displayWidth = getConfig().getInt("display-witdh", 128);
 
         // Loads the tasks util
         Task.init(this);
@@ -65,7 +74,8 @@ public final class Holovid extends JavaPlugin {
         Arrays.asList(
                 new DownloadCommand(this),
                 new PlayCommand(this),
-                new SpawnScreenCommand(this)
+                new SpawnScreenCommand(this),
+                new StopCommand(this)
         ).forEach(commandManager::register);
 
     }
@@ -74,11 +84,9 @@ public final class Holovid extends JavaPlugin {
         // Despawn old holograms if present
         despawnHologram();
 
-        hologram = new Hologram(72);
-        for (int i = 0; i < 72; i++) {
-            hologram.addLine();
-        }
-
+        // Lines are added when the actual images are displayed
+        hologram = new Hologram(displayHeight);
+        hologram.addLine();
         hologram.spawn(location);
     }
 
@@ -92,6 +100,56 @@ public final class Holovid extends JavaPlugin {
     @Nullable
     public Hologram getHologram() {
         return hologram;
+    }
+
+    @Nullable
+    public DisplayTask getTask() {
+        return task;
+    }
+
+    public void startTask(final List<File> files, final int height, final int fps) {
+        Preconditions.checkNotNull(hologram);
+        stopTask();
+
+        if (hologram.getLines().size() < height) {
+            // Expand hologram
+            for (int i = hologram.getLines().size(); i < height; i++) {
+                hologram.addLine();
+            }
+        } else {
+            // Shorten it (just in case)
+            final int size = hologram.getLines().size();
+            for (int i = height; i < size; i++) {
+                hologram.removeLine(hologram.getLines().size() - 1);
+            }
+        }
+
+        this.task = new DisplayTask(this, files, fps);
+        getServer().getScheduler().runTaskAsynchronously(this, task);
+    }
+
+    /**
+     * Stops the display task if it is currently running.
+     *
+     * @return true if the task was running and has now been cancelled
+     */
+    public boolean stopTask() {
+        if (task == null) {
+            return false;
+        }
+
+        task.setRunning(false);
+        task = null;
+        return true;
+    }
+
+
+    public int getDisplayHeight() {
+        return displayHeight;
+    }
+
+    public int getDisplayWidth() {
+        return displayWidth;
     }
 
 }
