@@ -1,47 +1,34 @@
-package me.mattstudios.minecraftchatvideo
+package me.mattstudios.minecraftchatvideo.command
 
 import me.mattstudios.mf.annotations.Command
-import me.mattstudios.mf.annotations.Default
+import me.mattstudios.mf.annotations.Completion
+import me.mattstudios.mf.annotations.SubCommand
 import me.mattstudios.mf.base.CommandBase
+import me.mattstudios.minecraftchatvideo.MinecraftChatVideo
 import net.md_5.bungee.api.ChatColor
-import net.md_5.bungee.api.chat.TextComponent
-import net.minecraft.server.v1_16_R1.ChatComponentText
-import net.minecraft.server.v1_16_R1.ChatMessage
-import net.minecraft.server.v1_16_R1.IChatBaseComponent
-import org.bukkit.Bukkit
-import org.bukkit.Color
-import org.bukkit.command.CommandSender
 import org.bukkit.craftbukkit.v1_16_R1.entity.CraftEntity
 import org.bukkit.craftbukkit.v1_16_R1.util.CraftChatMessage
 import org.bukkit.entity.Player
 import org.bukkit.scheduler.BukkitRunnable
 import java.io.File
 import java.lang.StringBuilder
-import java.net.URL
 import javax.imageio.ImageIO
 
 /**
  * @author Matt
  */
-@Command("playvideo")
+@Command("holovid")
 class PlayCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
 
     // All the frames
     private val frames = plugin.temporaryFrames
-
     private val armorStands = plugin.armorStands
 
-    init {
-        /*Bukkit.getScheduler().runTaskAsynchronously(plugin, Runnable {
-            //loadFrames()
-
-            Bukkit.broadcastMessage("Loaded!")
-        })*/
-    }
-
-    @Default
+    @SubCommand("play")
+    @Completion("#videos")
     fun command(player: Player, folder: String) {
-        loadFrames(folder)
+        //loadFrames(folder)
+
         object : BukkitRunnable() {
 
             var frameCounter = 0
@@ -73,12 +60,12 @@ class PlayCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
      */
     private fun loadFrames(folder: String) {
         // Gets all the files in the images folder
-        val files = File(plugin.dataFolder, folder).listFiles()?.filter { it.extension.equals("jpg", true) } ?: return
+        val files = File(plugin.dataFolder, folder).listFiles()?.filter { it.extension.equals("jpg", true) }?.sorted() ?: return
 
         // Cycles through the files
-        for (file in files.sorted()) {
+        for (file in files) {
             // Loads the image and ignores non image files
-            val image = ImageIO.read(file) ?: return
+            val image = ImageIO.read(file) ?: continue
 
             val frame = mutableListOf<String>()
 
@@ -90,7 +77,6 @@ class PlayCommand(private val plugin: MinecraftChatVideo) : CommandBase() {
                 for (j in 0 until image.width) {
                     val color = image.getRGB(j, i)
                     builder.append("${ChatColor.of("#" + Integer.toHexString(color).substring(2))}█")
-
                 }
 
                 frame.add(builder.toString())

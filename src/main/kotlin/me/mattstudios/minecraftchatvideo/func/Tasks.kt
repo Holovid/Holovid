@@ -1,7 +1,8 @@
-package me.mattstudios.minecraftchatvideo
+package me.mattstudios.minecraftchatvideo.func
 
 import org.bukkit.Bukkit
 import org.bukkit.plugin.Plugin
+import org.bukkit.scheduler.BukkitRunnable
 
 /**
  * @author Matt
@@ -14,13 +15,12 @@ object Tasks {
      * Loads the plugin instance
      */
     fun load(plugin: Plugin) {
-        this.plugin = plugin
+        Tasks.plugin = plugin
     }
 
     /**
      * Runs the task async
      */
     fun async(task: () -> Unit) = Bukkit.getScheduler().runTaskAsynchronously(plugin, task)
-
 
 }
