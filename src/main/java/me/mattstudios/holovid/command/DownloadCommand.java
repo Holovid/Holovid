@@ -25,12 +25,16 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
 
 @Command("holovid")
 public final class DownloadCommand extends CommandBase {
 
     private final Holovid plugin;
     private final YoutubeDownloader downloader = new YoutubeDownloader();
+    private Queue<Picture> pictures;
+    private boolean grabbingImages;
 
     public DownloadCommand(final Holovid plugin) {
         this.plugin = plugin;
@@ -73,18 +77,50 @@ public final class DownloadCommand extends CommandBase {
                 // Starts the frame grabber
                 final FrameGrab grab = FrameGrab.createFrameGrab(NIOUtils.readableChannel(videoFile));
 
-                for (int i = 0; i < max; i++) {
-                    final Picture frame = grab.getNativeFrame();
+                grabbingImages = true;
+                pictures = new ArrayBlockingQueue<>(max);
+                Task.async(() -> {
+                    Picture last = null;
+                    for (int i = 0; i < max; i++) {
+                        final Picture picture;
+                        try {
+                            picture = grab.getNativeFrame();
+                        } catch (final IOException e) {
+                            e.printStackTrace();
+                            continue;
+                        }
 
-                    if (frame == null) continue;
+                        // Write the last non-null picture again in case of failure
+                        if (picture != null) {
+                            last = picture;
+                        }
 
-                    //TODO parallelize grabbing the image vs. resizing/saving
-                    ImageIO.write(ImageUtils.resize(AWTUtil.toBufferedImage(frame), plugin.getDisplayWidth(), plugin.getDisplayHeight()),
-                            "jpg", new File(outputDir.getPath() + "/frame-" + i + ".jpg"));
+                        pictures.add(last);
+                    }
+
+                    grabbingImages = false;
+                });
+
+                // Resize and save images in parallel to the frame grabbing
+                for (int frameCount = 0; frameCount < max; frameCount++) {
+                    // Wait for frame to be loaded
+                    Picture picture;
+                    do {
+                        picture = pictures.poll();
+                    } while (picture == null && grabbingImages);
+
+                    if (picture == null) break; // In case a frame errors and grabbing is done
+
+                    ImageIO.write(ImageUtils.resize(AWTUtil.toBufferedImage(picture), plugin.getDisplayWidth(), plugin.getDisplayHeight()),
+                            "jpg", new File(outputDir.getPath() + "/frame-" + frameCount + ".jpg"));
 
                     // Debug percent checker
-                    if (i % 100 == 0) player.sendMessage("Complete - " + (i * 100 / max) + "%");
+                    if (frameCount % 100 == 0) {
+                        player.sendMessage("Complete - " + (frameCount * 100 / max) + "%");
+                    }
                 }
+
+                pictures = null;
 
                 final YamlConfiguration dataConfig = new YamlConfiguration();
                 dataConfig.set("fps", fps);
@@ -95,7 +131,7 @@ public final class DownloadCommand extends CommandBase {
                 videoFile.delete();
 
                 player.sendMessage("Load complete!");
-            } catch (YoutubeException | IOException | JCodecException e) {
+            } catch (final YoutubeException | IOException | JCodecException e) {
                 player.sendMessage("Error downloading the video!");
                 e.printStackTrace();
             }
