@@ -12,8 +12,9 @@ public abstract class DisplayTask implements Runnable {
     private final long frameDelay;
     private final boolean repeat;
     private long lastDisplayed;
-    protected boolean running = true;
     protected int frameCounter;
+
+    private Thread runningThread;
 
     protected DisplayTask(final Holovid plugin, final boolean repeat, final int fps) {
         this.plugin = plugin;
@@ -23,40 +24,45 @@ public abstract class DisplayTask implements Runnable {
 
     @Override
     public void run() {
-        while (running) {
-            // Load the frame in
-            final IChatBaseComponent[] frame = getCurrentFrame();
-            if (frame == null) return;
-
-            // Frame delay
-            final long timeSinceLast = System.currentTimeMillis() - lastDisplayed;
-            if (timeSinceLast < frameDelay) {
-                try {
-                    Thread.sleep(frameDelay - timeSinceLast);
-                } catch (final InterruptedException e) {
-                    e.printStackTrace();
-                }
+        this.runningThread = Thread.currentThread();
+        do {
+            try {
+                runCycle();
+            } catch (InterruptedException e) {
+                return;
             }
+        } while (!Thread.interrupted());
+    }
 
-            // Set hologram lines
-            final List<HologramLine> lines = plugin.getHologram().getLines();
-            for (int i = 0; i < frame.length; i++) {
-                final IChatBaseComponent line = frame[i];
-                final HologramLine hologramLine = lines.get(i);
-                hologramLine.updateText(line);
-            }
+    private void runCycle() throws InterruptedException {
+        // Load the frame in
+        final IChatBaseComponent[] frame = getCurrentFrame();
+        if (frame == null) return;
 
-            if (++frameCounter == getMaxFrames()) {
-                if (!repeat) {
-                    plugin.stopTask();
-                    return;
-                }
-
-                frameCounter = 0;
-            }
-
-            lastDisplayed = System.currentTimeMillis();
+        // Frame delay
+        final long timeSinceLast = System.currentTimeMillis() - lastDisplayed;
+        if (timeSinceLast < frameDelay) {
+            Thread.sleep(frameDelay - timeSinceLast);
         }
+
+        // Set hologram lines
+        final List<HologramLine> lines = plugin.getHologram().getLines();
+        for (int i = 0; i < frame.length; i++) {
+            final IChatBaseComponent line = frame[i];
+            final HologramLine hologramLine = lines.get(i);
+            hologramLine.updateText(line);
+        }
+
+        if (++frameCounter == getMaxFrames()) {
+            if (!repeat) {
+                plugin.stopTask();
+                return;
+            }
+
+            frameCounter = 0;
+        }
+
+        lastDisplayed = System.currentTimeMillis();
     }
 
     /**
@@ -64,9 +70,9 @@ public abstract class DisplayTask implements Runnable {
      */
     public abstract int getMaxFrames();
 
-    protected abstract IChatBaseComponent[] getCurrentFrame();
+    protected abstract IChatBaseComponent[] getCurrentFrame() throws InterruptedException;
 
     public void stop() {
-        this.running = false;
+        this.runningThread.interrupt();
     }
 }
