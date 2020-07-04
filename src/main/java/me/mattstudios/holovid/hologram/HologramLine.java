@@ -8,7 +8,11 @@ import me.mattstudios.holovid.utils.NMSUtils;
 import net.minecraft.server.v1_16_R1.IChatBaseComponent;
 import org.bukkit.Location;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Individual hologram line of its {@link Hologram} parent.
@@ -30,7 +34,7 @@ public final class HologramLine {
     /**
      * Sends a metadata update with the given text.
      *
-     * @param jsonText mojangson text to set
+     * @param component text component
      */
     public void updateText(final IChatBaseComponent component) {
         final PacketContainer packetContainer = new PacketContainer(PacketType.Play.Server.ENTITY_METADATA);
