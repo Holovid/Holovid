@@ -73,7 +73,7 @@ public final class DisplayTask implements Runnable {
                 ChatBaseComponent component = new ChatComponentText("");
                 for (int x = 0; x < width; x++) {
                     ChatComponentText text = new ChatComponentText("█");
-                    text.c(ChatModifier.b.setColor(ChatHexColor.a("#" + Integer.toHexString(rgbArray[y * width + x]).substring(2))));
+                    text.setChatModifier(ChatModifier.b.setColor(ChatHexColor.a(rgbArray[y * width + x] & 0x00FFFFFF)));
                     component.addSibling(text);
                 }
                 frame[image.getHeight() - y - 1] = component;
