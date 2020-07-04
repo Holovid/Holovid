@@ -8,11 +8,7 @@ import me.mattstudios.holovid.utils.NMSUtils;
 import net.minecraft.server.v1_16_R1.IChatBaseComponent;
 import org.bukkit.Location;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Individual hologram line of its {@link Hologram} parent.
@@ -24,7 +20,7 @@ public final class HologramLine {
 
     /**
      * @param parent parent hologram
-     * @see #updateText(String) to set text; not stored since they are supposed to be quickly discarded and changed
+     * @see #updateText(IChatBaseComponent) to set text; not stored since they are supposed to be quickly discarded and changed
      */
     public HologramLine(final Hologram parent) {
         this.parent = parent;
@@ -36,10 +32,9 @@ public final class HologramLine {
      *
      * @param jsonText mojangson text to set
      */
-    public void updateText(final String jsonText) {
+    public void updateText(final IChatBaseComponent component) {
         final PacketContainer packetContainer = new PacketContainer(PacketType.Play.Server.ENTITY_METADATA);
         packetContainer.getIntegers().write(0, entityId);
-        final IChatBaseComponent component = IChatBaseComponent.ChatSerializer.a(jsonText);
         final List<WrappedWatchableObject> object = Collections.singletonList(
                 new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(2,
                         WrappedDataWatcher.Registry.getChatComponentSerializer(true)), Optional.ofNullable(component)));
