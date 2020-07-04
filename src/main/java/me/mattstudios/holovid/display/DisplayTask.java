@@ -13,7 +13,7 @@ public abstract class DisplayTask implements Runnable {
     private final Holovid plugin;
     private final long frameDelay;
     private final boolean repeat;
-    private long lastDisplayed;
+    private long lastDisplayed = 0L;
     protected int frameCounter;
 
     private Lock runningInfoLock = new ReentrantLock();
