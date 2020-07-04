@@ -1,7 +1,6 @@
 package me.mattstudios.holovid;
 
 import me.mattstudios.holovid.hologram.HologramLine;
-import net.md_5.bungee.api.chat.BaseComponent;
 import net.minecraft.server.v1_16_R1.*;
 
 import javax.imageio.ImageIO;

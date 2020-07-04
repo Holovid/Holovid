@@ -5,15 +5,10 @@ import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.wrappers.WrappedDataWatcher;
 import com.comphenix.protocol.wrappers.WrappedWatchableObject;
 import me.mattstudios.holovid.utils.NMSUtils;
-import net.md_5.bungee.api.chat.BaseComponent;
 import net.minecraft.server.v1_16_R1.IChatBaseComponent;
 import org.bukkit.Location;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Individual hologram line of its {@link Hologram} parent.
