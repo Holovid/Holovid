@@ -23,17 +23,11 @@ public final class BufferedDisplayTask extends DisplayTask {
     }
 
     @Override
-    public void run() {
+    protected void prerun() throws InterruptedException {
         // Give the processing a headstart
         if (startDelay > 0) {
-            try {
-                Thread.sleep(startDelay);
-            } catch (final InterruptedException e) {
-                e.printStackTrace();
-            }
+            Thread.sleep(startDelay);
         }
-
-        super.run();
     }
 
     @Override
@@ -52,12 +46,6 @@ public final class BufferedDisplayTask extends DisplayTask {
             frameText[i] = dataToComponent(frame[i]);
         }
         return frameText;
-    }
-
-    @Override
-    public void stop() {
-        super.stop();
-        frames.clear();
     }
 
     public ArrayBlockingQueue<int[][]> getFrameQueue() {

@@ -35,12 +35,6 @@ public final class FileDisplayTask extends DisplayTask {
         return getFrame(file);
     }
 
-    @Override
-    public void stop() {
-        super.stop();
-        files.clear();
-    }
-
     private IChatBaseComponent[] getFrame(final File file) {
         try {
             final BufferedImage image = ImageIO.read(file);
