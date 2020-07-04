@@ -5,6 +5,11 @@ import me.mattstudios.holovid.command.DownloadCommand;
 import me.mattstudios.holovid.command.PlayCommand;
 import me.mattstudios.holovid.command.SpawnScreenCommand;
 import me.mattstudios.holovid.command.StopCommand;
+import me.mattstudios.holovid.display.BufferedDisplayTask;
+import me.mattstudios.holovid.display.DisplayTask;
+import me.mattstudios.holovid.display.FileDisplayTask;
+import me.mattstudios.holovid.download.VideoDownloader;
+import me.mattstudios.holovid.download.YouTubeDownloader;
 import me.mattstudios.holovid.hologram.Hologram;
 import me.mattstudios.holovid.listener.HologramListener;
 import me.mattstudios.holovid.utils.Task;
@@ -26,6 +31,7 @@ import java.util.stream.Collectors;
 public final class Holovid extends JavaPlugin {
 
     private CommandManager commandManager;
+    private VideoDownloader videoDownloader;
     private Hologram hologram;
     private DisplayTask task;
 
@@ -42,6 +48,7 @@ public final class Holovid extends JavaPlugin {
         Task.init(this);
 
         commandManager = new CommandManager(this);
+        videoDownloader = new YouTubeDownloader(this);
 
         getServer().getPluginManager().registerEvents(new HologramListener(this), this);
         registerCommands();
@@ -113,6 +120,20 @@ public final class Holovid extends JavaPlugin {
     }
 
     public void startTask(final List<File> files, final int height, final int fps) {
+        prepareForTask(height);
+
+        this.task = new FileDisplayTask(this, true, files, fps);
+        Task.async(task);
+    }
+
+    public void startBufferedTask(final long startDelay, final int frames, final int height, final int fps) {
+        prepareForTask(height);
+
+        this.task = new BufferedDisplayTask(this, startDelay, true, frames, fps);
+        Task.async(task);
+    }
+
+    private void prepareForTask(final int height) {
         Preconditions.checkNotNull(hologram);
         stopTask();
 
@@ -128,9 +149,6 @@ public final class Holovid extends JavaPlugin {
                 hologram.removeLine(hologram.getLines().size() - 1);
             }
         }
-
-        this.task = new DisplayTask(this, files, fps);
-        getServer().getScheduler().runTaskAsynchronously(this, task);
     }
 
     /**
@@ -143,11 +161,16 @@ public final class Holovid extends JavaPlugin {
             return false;
         }
 
-        task.setRunning(false);
+        videoDownloader.stopCurrentDownloading();
+        task.stop();
         task = null;
         return true;
     }
 
+    public VideoDownloader getVideoDownloader() {
+        //TODO get different downloaders for different sites
+        return videoDownloader;
+    }
 
     public int getDisplayHeight() {
         return displayHeight;
