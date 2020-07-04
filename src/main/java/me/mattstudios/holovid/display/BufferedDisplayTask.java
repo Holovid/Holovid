@@ -1,7 +1,11 @@
 package me.mattstudios.holovid.display;
 
 import me.mattstudios.holovid.Holovid;
-import net.minecraft.server.v1_16_R1.*;
+import net.minecraft.server.v1_16_R1.ChatBaseComponent;
+import net.minecraft.server.v1_16_R1.ChatComponentText;
+import net.minecraft.server.v1_16_R1.ChatHexColor;
+import net.minecraft.server.v1_16_R1.ChatModifier;
+import net.minecraft.server.v1_16_R1.IChatBaseComponent;
 
 import java.util.concurrent.ArrayBlockingQueue;
 
