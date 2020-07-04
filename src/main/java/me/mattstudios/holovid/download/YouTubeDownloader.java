@@ -191,6 +191,11 @@ public final class YouTubeDownloader implements VideoDownloader {
         waitForQueueReduction();
 
         final BufferedDisplayTask task = (BufferedDisplayTask) plugin.getTask();
-        task.getFrameQueue().add(frame);
+        // Block until the frame can be placed in the queue
+        try {
+            task.getFrameQueue().put(frame);
+        } catch (InterruptedException e){
+            e.printStackTrace();
+        }
     }
 }

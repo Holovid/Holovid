@@ -9,10 +9,11 @@ import net.minecraft.server.v1_16_R1.IChatBaseComponent;
 
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public final class BufferedDisplayTask extends DisplayTask {
 
-    private final Queue<int[][]> frames;
+    private final LinkedBlockingQueue<int[][]> frames;
     private final int bufferCapacity;
     private final long startDelay;
     private final int max;
@@ -24,7 +25,7 @@ public final class BufferedDisplayTask extends DisplayTask {
 
         // Buffer up to 30 seconds beforehand
         this.bufferCapacity = 30 * fps;
-        this.frames = new ArrayBlockingQueue<>(bufferCapacity);
+        this.frames = new LinkedBlockingQueue<>(bufferCapacity);
     }
 
     @Override
@@ -50,11 +51,12 @@ public final class BufferedDisplayTask extends DisplayTask {
     protected IChatBaseComponent[] getCurrentFrame() {
         // Block until the frame is processed
         int[][] frame;
-        do {
-            frame = frames.poll();
-        } while (frame == null && running);
-
-        if (frame == null) return null;
+        try {
+            frame = frames.take();
+        } catch (InterruptedException e){
+            e.printStackTrace(); //Something went wrong this should never be hit
+            return null;
+        }
 
         // Convert to json component
         final IChatBaseComponent[] frameText = new IChatBaseComponent[frame.length];
@@ -70,7 +72,7 @@ public final class BufferedDisplayTask extends DisplayTask {
         frames.clear();
     }
 
-    public Queue<int[][]> getFrameQueue() {
+    public LinkedBlockingQueue<int[][]> getFrameQueue() {
         return frames;
     }
 
