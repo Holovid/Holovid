@@ -1,6 +1,8 @@
 package me.mattstudios.holovid;
 
 import me.mattstudios.holovid.hologram.HologramLine;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.minecraft.server.v1_16_R1.*;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -26,7 +28,7 @@ public final class DisplayTask implements Runnable {
     @Override
     public void run() {
         while (running) {
-            final String[] frame = getFrame(files.get(frameCounter));
+            final IChatBaseComponent[] frame = getFrame(files.get(frameCounter));
             final List<HologramLine> lines = plugin.getHologram().getLines();
 
             // Frame delay
@@ -41,7 +43,7 @@ public final class DisplayTask implements Runnable {
 
             // Set hologram lines
             for (int i = 0; i < frame.length; i++) {
-                final String line = frame[i];
+                final IChatBaseComponent line = frame[i];
                 final HologramLine hologramLine = lines.get(i);
                 hologramLine.updateText(line);
             }
@@ -58,32 +60,31 @@ public final class DisplayTask implements Runnable {
         this.running = running;
     }
 
-    private String[] getFrame(final File file) {
+    private IChatBaseComponent[] getFrame(final File file) {
 
         try {
             final BufferedImage image = ImageIO.read(file);
-            final String[] frame = new String[image.getHeight()];
+            final IChatBaseComponent[] frame = new IChatBaseComponent[image.getHeight()];
+            final int width = image.getWidth();
+            final int height = image.getHeight();
 
-            for (int i = 0; i < image.getHeight(); i++) {
+            final int[] rgbArray = image.getRGB(0, 0, width, height, null, 0, width);
 
-                final StringBuilder builder = new StringBuilder("{\"text\":\"\",\"extra\":[");
-
-                for (int j = 0; j < image.getWidth(); j++) {
-                    final int color = image.getRGB(j, i);
-                    builder.append("{\"color\":\"#").append(String.format("%06x", color & 0x00FFFFFF)).append("\",\"text\":\"█\"},");
+            for (int y = 0; y < height; y++) {
+                ChatBaseComponent component = new ChatComponentText("");
+                for (int x = 0; x < width; x++) {
+                    ChatComponentText text = new ChatComponentText("█");
+                    text.c(ChatModifier.b.setColor(ChatHexColor.a("#" + Integer.toHexString(rgbArray[y * width + x]).substring(2))));
+                    component.addSibling(text);
                 }
-
-                builder.deleteCharAt(builder.length() - 1).append("]}");
-                // Holograms are from bottom to top
-                frame[image.getHeight() - i - 1] = builder.toString();
+                frame[image.getHeight() - y - 1] = component;
             }
 
             return frame;
-
         } catch (final IOException e) {
             e.printStackTrace();
         }
 
-        return new String[0];
+        return new IChatBaseComponent[0];
     }
 }
