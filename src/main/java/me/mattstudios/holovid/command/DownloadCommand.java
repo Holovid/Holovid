@@ -60,7 +60,7 @@ public final class DownloadCommand extends CommandBase {
                 final List<AudioVideoFormat> videoWithAudioFormats = video.videoWithAudioFormats();
                 final List<VideoFormat> videoQuality = video.findVideoWithQuality(VideoQuality.tiny);
 
-                final File outputDir = new File(plugin.getDataFolder(), "saves/" + video.details().title().replace(" ", ""));
+                final File outputDir = new File(plugin.getDataFolder(), "saves/" + video.details().title().replaceAll("[^A-Za-z0-9]", ""));
 
                 // Gets the format to use on the download (this one has been the only one to work so far)
                 final AudioVideoFormat format = videoWithAudioFormats.get(0);
