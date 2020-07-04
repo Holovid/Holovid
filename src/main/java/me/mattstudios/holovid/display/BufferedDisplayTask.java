@@ -12,7 +12,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 public final class BufferedDisplayTask extends DisplayTask {
 
-    private final Queue<int[][]> frames;
+    private final ArrayBlockingQueue<int[][]> frames;
     private final int bufferCapacity;
     private final long startDelay;
     private final int max;
@@ -50,11 +50,12 @@ public final class BufferedDisplayTask extends DisplayTask {
     protected IChatBaseComponent[] getCurrentFrame() {
         // Block until the frame is processed
         int[][] frame;
-        do {
-            frame = frames.poll();
-        } while (frame == null && running);
-
-        if (frame == null) return null;
+        try {
+            frame = frames.take();
+        } catch (InterruptedException e){
+            e.printStackTrace(); //Something went wrong this should never be hit
+            return null;
+        }
 
         // Convert to json component
         final IChatBaseComponent[] frameText = new IChatBaseComponent[frame.length];
@@ -70,7 +71,7 @@ public final class BufferedDisplayTask extends DisplayTask {
         frames.clear();
     }
 
-    public Queue<int[][]> getFrameQueue() {
+    public ArrayBlockingQueue<int[][]> getFrameQueue() {
         return frames;
     }
 
