@@ -7,13 +7,11 @@ import net.minecraft.server.v1_16_R1.ChatHexColor;
 import net.minecraft.server.v1_16_R1.ChatModifier;
 import net.minecraft.server.v1_16_R1.IChatBaseComponent;
 
-import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 public final class BufferedDisplayTask extends DisplayTask {
 
-    private final LinkedBlockingQueue<int[][]> frames;
+    private final ArrayBlockingQueue<int[][]> frames;
     private final int bufferCapacity;
     private final long startDelay;
     private final int max;
@@ -25,21 +23,15 @@ public final class BufferedDisplayTask extends DisplayTask {
 
         // Buffer up to 30 seconds beforehand
         this.bufferCapacity = 30 * fps;
-        this.frames = new LinkedBlockingQueue<>(bufferCapacity);
+        this.frames = new ArrayBlockingQueue<>(bufferCapacity);
     }
 
     @Override
-    public void run() {
+    protected void prerun() throws InterruptedException {
         // Give the processing a headstart
         if (startDelay > 0) {
-            try {
-                Thread.sleep(startDelay);
-            } catch (final InterruptedException e) {
-                e.printStackTrace();
-            }
+            Thread.sleep(startDelay);
         }
-
-        super.run();
     }
 
     @Override
@@ -48,15 +40,9 @@ public final class BufferedDisplayTask extends DisplayTask {
     }
 
     @Override
-    protected IChatBaseComponent[] getCurrentFrame() {
+    protected IChatBaseComponent[] getCurrentFrame() throws InterruptedException {
         // Block until the frame is processed
-        int[][] frame;
-        try {
-            frame = frames.take();
-        } catch (InterruptedException e){
-            e.printStackTrace(); //Something went wrong this should never be hit
-            return null;
-        }
+        int[][] frame = frames.take();
 
         // Convert to json component
         final IChatBaseComponent[] frameText = new IChatBaseComponent[frame.length];
@@ -66,13 +52,7 @@ public final class BufferedDisplayTask extends DisplayTask {
         return frameText;
     }
 
-    @Override
-    public void stop() {
-        super.stop();
-        frames.clear();
-    }
-
-    public LinkedBlockingQueue<int[][]> getFrameQueue() {
+    public ArrayBlockingQueue<int[][]> getFrameQueue() {
         return frames;
     }
 
