@@ -11,9 +11,9 @@ import java.util.concurrent.locks.ReentrantLock;
 public abstract class DisplayTask implements Runnable {
 
     private final Holovid plugin;
-    private final long frameDelay;
+    private final long frameDelayNanos;
     private final boolean repeat;
-    private long lastDisplayed;
+    private long nextDisplayNanos;
     protected int frameCounter;
 
     private final Lock runningInfoLock = new ReentrantLock();
@@ -23,7 +23,7 @@ public abstract class DisplayTask implements Runnable {
     protected DisplayTask(final Holovid plugin, final boolean repeat, final int fps) {
         this.plugin = plugin;
         this.repeat = repeat;
-        this.frameDelay = 1000 / fps;
+        this.frameDelayNanos = (long) ((1000D / fps) * 1_000_000);
     }
 
     @Override
@@ -43,6 +43,8 @@ public abstract class DisplayTask implements Runnable {
             return;
         }
 
+        nextDisplayNanos = System.nanoTime();
+
         do {
             try {
                 runCycle();
@@ -61,10 +63,15 @@ public abstract class DisplayTask implements Runnable {
         if (frame == null) return;
 
         // Frame delay
-        final long timeSinceLast = System.currentTimeMillis() - lastDisplayed;
-        if (timeSinceLast < frameDelay) {
-            Thread.sleep(frameDelay - timeSinceLast);
+        final long nanoTime = System.nanoTime();
+        final long delay = nextDisplayNanos - nanoTime;
+        if (delay > 0) {
+            final long delayMillis = delay / 1_000_000;
+            Thread.sleep(delayMillis, (int) (delay % 1_000_000));
         }
+
+        // Try to keep this in perfect sync
+        nextDisplayNanos += frameDelayNanos;
 
         // Set hologram lines
         final List<HologramLine> lines = plugin.getHologram().getLines();
@@ -82,8 +89,6 @@ public abstract class DisplayTask implements Runnable {
 
             frameCounter = 0;
         }
-
-        lastDisplayed = System.currentTimeMillis();
     }
 
     /**
