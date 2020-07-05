@@ -89,7 +89,8 @@ public final class YouTubeDownloader implements VideoDownloader {
 
                 threadLock.lock();
                 frameProcessingThread = Thread.currentThread();
-                pictures = new ArrayBlockingQueue<>(max);
+                // Limit to a few seconds of video if buffered
+                pictures = new ArrayBlockingQueue<>(instantPlay ? Holovid.PRE_RENDER_SECONDS * fps : max);
                 threadLock.unlock();
 
                 Task.async(() -> {
@@ -114,17 +115,18 @@ public final class YouTubeDownloader implements VideoDownloader {
                             last = picture;
                         }
 
+                        if (Thread.interrupted()) return;
+
                         if (instantPlay) {
+                            // Block if there already are a lot of pre-buffered frames
                             try {
-                                waitForQueueReduction();
+                                pictures.put(last);
                             } catch (final InterruptedException e) {
                                 return;
                             }
+                        } else {
+                            pictures.add(last);
                         }
-
-                        if (Thread.interrupted()) return;
-
-                        pictures.add(last);
                     }
 
                     threadLock.lock();
@@ -194,15 +196,6 @@ public final class YouTubeDownloader implements VideoDownloader {
         threadLock.unlock();
     }
 
-    private void waitForQueueReduction() throws InterruptedException {
-        // The cache shouldn't accumulate too much data
-        final BufferedDisplayTask task = (BufferedDisplayTask) plugin.getTask();
-        if (task == null) return;
-        while (task.isQueueFull()) {
-            Thread.sleep(5);
-        }
-    }
-
     private void addToBufferedDisplay(final Picture picture) throws IOException, InterruptedException {
         final int width = plugin.getDisplayWidth();
         final int height = plugin.getDisplayHeight();
@@ -215,8 +208,6 @@ public final class YouTubeDownloader implements VideoDownloader {
             final int[] row = frame[height - i - 1];
             System.arraycopy(rgbArray, i * width, row, 0, width);
         }
-
-        waitForQueueReduction();
 
         final BufferedDisplayTask task = (BufferedDisplayTask) plugin.getTask();
         if (task == null) return;
