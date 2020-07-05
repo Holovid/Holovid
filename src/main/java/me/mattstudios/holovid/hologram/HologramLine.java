@@ -19,6 +19,8 @@ import java.util.UUID;
  */
 public final class HologramLine {
 
+    private static final WrappedDataWatcher.Serializer chatSerializer = WrappedDataWatcher.Registry.getChatComponentSerializer(true);
+
     private final Hologram parent;
     private final int entityId;
 
@@ -39,9 +41,9 @@ public final class HologramLine {
     public void updateText(final IChatBaseComponent component) {
         final PacketContainer packetContainer = new PacketContainer(PacketType.Play.Server.ENTITY_METADATA);
         packetContainer.getIntegers().write(0, entityId);
+
         final List<WrappedWatchableObject> object = Collections.singletonList(
-                new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(2,
-                        WrappedDataWatcher.Registry.getChatComponentSerializer(true)), Optional.ofNullable(component)));
+                new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(2, chatSerializer), Optional.ofNullable(component)));
         packetContainer.getWatchableCollectionModifier().write(0, object);
         parent.distributePacket(packetContainer);
     }
