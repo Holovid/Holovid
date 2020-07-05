@@ -25,15 +25,18 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
-import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public final class YouTubeDownloader implements VideoDownloader {
 
     private final YoutubeDownloader downloader = new YoutubeDownloader();
+    private final Lock threadLock = new ReentrantLock();
     private final Holovid plugin;
-    private Queue<Picture> pictures;
-    private boolean grabbingImages;
+    private ArrayBlockingQueue<Picture> pictures;
+    private Thread grabbingThread;
+    private Thread frameProcessingThread;
 
     public YouTubeDownloader(final Holovid plugin) {
         this.plugin = plugin;
@@ -46,6 +49,7 @@ public final class YouTubeDownloader implements VideoDownloader {
         final String id = videoUrl.getQuery().substring(2);
 
         Task.async(() -> {
+            File videoFile = null;
             try {
                 player.sendMessage("Downloading video...");
 
@@ -61,7 +65,7 @@ public final class YouTubeDownloader implements VideoDownloader {
                 final AudioVideoFormat format = videoWithAudioFormats.get(0);
 
                 // Downloads the video into the videos dir
-                File videoFile = VideoTitleUtils.titleToFile(outputDir, video.details(), format);
+                videoFile = VideoTitleUtils.titleToFile(outputDir, video.details(), format);
                 if (!videoFile.exists() || !videoFile.isFile()) {
                     // Download if it is not already in the videos folder
                     videoFile = video.download(format, outputDir);
@@ -83,10 +87,16 @@ public final class YouTubeDownloader implements VideoDownloader {
                 // Starts the frame grabber
                 final FrameGrab grab = FrameGrab.createFrameGrab(NIOUtils.readableChannel(videoFile));
 
-
-                grabbingImages = true;
+                threadLock.lock();
+                frameProcessingThread = Thread.currentThread();
                 pictures = new ArrayBlockingQueue<>(max);
+                threadLock.unlock();
+
                 Task.async(() -> {
+                    threadLock.lock();
+                    grabbingThread = Thread.currentThread();
+                    threadLock.unlock();
+
                     Picture last = null;
                     for (int i = 0; i < max; i++) {
                         final Picture picture;
@@ -94,10 +104,10 @@ public final class YouTubeDownloader implements VideoDownloader {
                             picture = grab.getNativeFrame();
                         } catch (final IOException e) {
                             e.printStackTrace();
-                            continue;
+                            // Interrupt threads on error
+                            stopCurrentDownloading();
+                            return;
                         }
-
-                        if (pictures == null) break;
 
                         // Write the last non-null picture again in case of failure
                         if (picture != null) {
@@ -105,13 +115,21 @@ public final class YouTubeDownloader implements VideoDownloader {
                         }
 
                         if (instantPlay) {
-                            waitForQueueReduction();
+                            try {
+                                waitForQueueReduction();
+                            } catch (final InterruptedException e) {
+                                return;
+                            }
                         }
+
+                        if (Thread.interrupted()) return;
 
                         pictures.add(last);
                     }
 
-                    grabbingImages = false;
+                    threadLock.lock();
+                    grabbingThread = null;
+                    threadLock.unlock();
                 });
 
                 if (instantPlay) {
@@ -121,12 +139,10 @@ public final class YouTubeDownloader implements VideoDownloader {
 
                 // Resize and save images in parallel to the frame grabbing
                 for (int frameCount = 0; frameCount < max; frameCount++) {
-                    // Wait for frame to be loaded
-                    Picture picture = null;
-                    do {
-                        picture = pictures.poll();
-                    } while (picture == null && grabbingImages && pictures != null);
+                    if (Thread.interrupted()) return;
 
+                    // Wait for frame to be loaded
+                    final Picture picture = pictures.take();
                     if (picture == null) break; // In case a frame errors and grabbing is done
 
                     if (instantPlay) {
@@ -142,15 +158,21 @@ public final class YouTubeDownloader implements VideoDownloader {
                     }
                 }
 
+                threadLock.lock();
                 pictures = null;
-
-                if (!instantPlay) {
+                frameProcessingThread = null;
+                if (!instantPlay && videoFile.exists()) {
                     videoFile.delete();
                     player.sendMessage("Load complete!");
                 }
+                threadLock.unlock();
             } catch (final YoutubeException | IOException | JCodecException e) {
                 player.sendMessage("Error downloading the video!");
                 e.printStackTrace();
+            } catch (final InterruptedException e) {
+                if (videoFile != null && videoFile.exists() && !instantPlay) {
+                    videoFile.delete();
+                }
             }
         });
 
@@ -158,24 +180,30 @@ public final class YouTubeDownloader implements VideoDownloader {
 
     @Override
     public void stopCurrentDownloading() {
-        pictures = null;
+        threadLock.lock();
+        if (grabbingThread != null) {
+            grabbingThread.interrupt();
+        }
+        if (frameProcessingThread != null) {
+            frameProcessingThread.interrupt();
+        }
+        if (pictures != null) {
+            pictures.clear();
+            pictures = null;
+        }
+        threadLock.unlock();
     }
 
-    private void waitForQueueReduction() {
-        if (pictures == null) return;
-
+    private void waitForQueueReduction() throws InterruptedException {
         // The cache shouldn't accumulate too much data
         final BufferedDisplayTask task = (BufferedDisplayTask) plugin.getTask();
+        if (task == null) return;
         while (task.isQueueFull()) {
-            try {
-                Thread.sleep(5);
-            } catch (final InterruptedException e) {
-                e.printStackTrace();
-            }
+            Thread.sleep(5);
         }
     }
 
-    private void addToBufferedDisplay(final Picture picture) throws IOException {
+    private void addToBufferedDisplay(final Picture picture) throws IOException, InterruptedException {
         final int width = plugin.getDisplayWidth();
         final int height = plugin.getDisplayHeight();
 
@@ -191,10 +219,12 @@ public final class YouTubeDownloader implements VideoDownloader {
         waitForQueueReduction();
 
         final BufferedDisplayTask task = (BufferedDisplayTask) plugin.getTask();
+        if (task == null) return;
+
         // Block until the frame can be placed in the queue
         try {
             task.getFrameQueue().put(frame);
-        } catch (InterruptedException e){
+        } catch (final InterruptedException e) {
             e.printStackTrace();
         }
     }

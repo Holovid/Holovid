@@ -42,7 +42,7 @@ public final class BufferedDisplayTask extends DisplayTask {
     @Override
     protected IChatBaseComponent[] getCurrentFrame() throws InterruptedException {
         // Block until the frame is processed
-        int[][] frame = frames.take();
+        final int[][] frame = frames.take();
 
         // Convert to json component
         final IChatBaseComponent[] frameText = new IChatBaseComponent[frame.length];

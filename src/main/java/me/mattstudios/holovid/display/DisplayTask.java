@@ -13,12 +13,12 @@ public abstract class DisplayTask implements Runnable {
     private final Holovid plugin;
     private final long frameDelay;
     private final boolean repeat;
-    private long lastDisplayed = 0L;
+    private long lastDisplayed;
     protected int frameCounter;
 
-    private Lock runningInfoLock = new ReentrantLock();
-    private Thread runningThread = null;
-    private boolean deadBeforeStarted = false;
+    private final Lock runningInfoLock = new ReentrantLock();
+    private Thread runningThread;
+    private boolean deadBeforeStarted;
 
     protected DisplayTask(final Holovid plugin, final boolean repeat, final int fps) {
         this.plugin = plugin;
@@ -29,16 +29,16 @@ public abstract class DisplayTask implements Runnable {
     @Override
     public void run() {
         this.runningInfoLock.lock();
-        if (deadBeforeStarted)
+        if (deadBeforeStarted) {
             return;
+        }
 
         this.runningThread = Thread.currentThread();
         this.runningInfoLock.unlock();
 
-
         try {
             prerun();
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             // We were stopped during the prerun, so just exit now.
             return;
         }
@@ -46,13 +46,14 @@ public abstract class DisplayTask implements Runnable {
         do {
             try {
                 runCycle();
-            } catch (InterruptedException e) {
+            } catch (final InterruptedException e) {
                 return;
             }
         } while (!Thread.interrupted());
     }
 
-    protected void prerun() throws InterruptedException {}
+    protected void prerun() throws InterruptedException {
+    }
 
     private void runCycle() throws InterruptedException {
         // Load the frame in
