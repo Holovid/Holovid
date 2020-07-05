@@ -3,8 +3,6 @@ package me.mattstudios.holovid.display;
 import me.mattstudios.holovid.Holovid;
 import net.minecraft.server.v1_16_R1.ChatBaseComponent;
 import net.minecraft.server.v1_16_R1.ChatComponentText;
-import net.minecraft.server.v1_16_R1.ChatHexColor;
-import net.minecraft.server.v1_16_R1.ChatModifier;
 import net.minecraft.server.v1_16_R1.IChatBaseComponent;
 
 import java.util.concurrent.ArrayBlockingQueue;
@@ -62,10 +60,12 @@ public final class BufferedDisplayTask extends DisplayTask {
 
     private IChatBaseComponent dataToComponent(final int[] row) {
         final ChatBaseComponent component = new ChatComponentText("");
-        for (final int rgb : row) {
-            final ChatComponentText text = new ChatComponentText("█");
-            text.setChatModifier(ChatModifier.b.setColor(ChatHexColor.a(rgb & 0x00FFFFFF)));
-            component.addSibling(text);
+        ChatComponentText lastComponent = null;
+        int lastRgb = 0xFFFFFF;
+        for (int rgb : row) {
+            rgb &= 0x00FFFFFF;
+            lastComponent = appendComponent(component, rgb, lastRgb, lastComponent);
+            lastRgb = rgb;
         }
         return component;
     }

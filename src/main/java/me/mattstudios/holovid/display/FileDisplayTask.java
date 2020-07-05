@@ -46,10 +46,12 @@ public final class FileDisplayTask extends DisplayTask {
 
             for (int y = 0; y < height; y++) {
                 final ChatBaseComponent component = new ChatComponentText("");
+                ChatComponentText lastComponent = null;
+                int lastRgb = 0xFFFFFF;
                 for (int x = 0; x < width; x++) {
-                    final ChatComponentText text = new ChatComponentText("█");
-                    text.setChatModifier(ChatModifier.b.setColor(ChatHexColor.a(rgbArray[y * width + x] & 0x00FFFFFF)));
-                    component.addSibling(text);
+                    final int rgb = rgbArray[y * width + x] & 0x00FFFFFF;
+                    lastComponent = appendComponent(component, rgb, lastRgb, lastComponent);
+                    lastRgb = rgb;
                 }
                 frame[image.getHeight() - y - 1] = component;
             }

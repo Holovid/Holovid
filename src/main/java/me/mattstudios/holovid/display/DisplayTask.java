@@ -2,6 +2,10 @@ package me.mattstudios.holovid.display;
 
 import me.mattstudios.holovid.Holovid;
 import me.mattstudios.holovid.hologram.HologramLine;
+import net.minecraft.server.v1_16_R1.ChatBaseComponent;
+import net.minecraft.server.v1_16_R1.ChatComponentText;
+import net.minecraft.server.v1_16_R1.ChatHexColor;
+import net.minecraft.server.v1_16_R1.ChatModifier;
 import net.minecraft.server.v1_16_R1.IChatBaseComponent;
 
 import java.util.List;
@@ -107,5 +111,23 @@ public abstract class DisplayTask implements Runnable {
             this.runningThread.interrupt();
         }
         this.runningInfoLock.unlock();
+    }
+
+    protected ChatComponentText appendComponent(final ChatBaseComponent parent, final int rgb, final int lastRgb, final ChatComponentText lastComponent) {
+        final ChatComponentText component;
+        if (lastComponent != null && rgb == lastRgb) {
+            // Add the character to the last component (with the same color)
+            component = new ChatComponentText(lastComponent.g() + "█");
+            // Replace old component
+            component.setChatModifier(lastComponent.getChatModifier());
+
+            parent.getSiblings().set(parent.getSiblings().size() - 1, component);
+        } else {
+            // Add a new component
+            component = new ChatComponentText("█");
+            component.setChatModifier(ChatModifier.b.setColor(ChatHexColor.a(rgb)));
+            parent.addSibling(component);
+        }
+        return component;
     }
 }
