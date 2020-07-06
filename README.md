@@ -1,4 +1,4 @@
-#Holovid
+# Holovid
 Holovid is an upcoming plugin that allows you to play videos in game.
 
 ![ExampleImage](https://i.imgur.com/JmZn6gb.gif)
