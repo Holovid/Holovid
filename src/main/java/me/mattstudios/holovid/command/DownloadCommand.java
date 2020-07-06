@@ -23,6 +23,11 @@ public final class DownloadCommand extends CommandBase {
     @SubCommand("download")
     @Completion("#empty")
     public void download(final Player player, final URL videoUrl, @Optional final boolean disableInterlacing) {
+        if (plugin.getHologram() == null) {
+            player.sendMessage("Use /holovid spawnscreen to spawn the armor stands first.");
+            return;
+        }
+
         plugin.stopTask();
         Task.async(() -> plugin.getVideoDownloader().download(player, videoUrl, disableInterlacing));
     }

@@ -56,6 +56,8 @@ public final class PlayCommand extends CommandBase {
             return;
         }
 
+        plugin.stopTask();
+
         final int fps = dataConfig.getInt("fps");
         final int frames = dataConfig.getInt("frames");
         final int height = dataConfig.getInt("height");

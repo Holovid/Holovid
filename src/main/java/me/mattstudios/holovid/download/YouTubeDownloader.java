@@ -7,7 +7,6 @@ import com.github.kiulian.downloader.model.formats.AudioVideoFormat;
 import com.github.kiulian.downloader.model.formats.VideoFormat;
 import com.github.kiulian.downloader.model.quality.VideoQuality;
 import me.mattstudios.holovid.Holovid;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
 import java.io.File;
@@ -16,20 +15,18 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.util.List;
 
-public final class YouTubeDownloader implements VideoDownloader {
+public final class YouTubeDownloader extends VideoDownloader {
 
     private final YoutubeDownloader downloader = new YoutubeDownloader();
-    private final Holovid plugin;
 
     public YouTubeDownloader(final Holovid plugin) {
-        this.plugin = plugin;
+        super(plugin);
         downloader.setParserRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.121 Safari/537.36");
     }
 
     public void download(final Player player, final URL videoUrl, final boolean disableInterlacing) {
         // Gets the video ID
         final String id = videoUrl.getQuery().substring(2);
-        File videoFile;
         try {
             player.sendMessage("Downloading video...");
 
@@ -45,28 +42,19 @@ public final class YouTubeDownloader implements VideoDownloader {
             final AudioVideoFormat format = videoWithAudioFormats.get(0);
 
             // Downloads the video into the videos dir
-            videoFile = new File(outputDir, "video.mp4");
+            final File videoFile = new File(outputDir, "video.mp4");
             if (!videoFile.exists() || !videoFile.isFile()) {
                 // Download if it is not already in the videos folder
-                videoFile = video.download(format, outputDir);
+                final File download = video.download(format, outputDir);
 
                 // Rename for easier access
-                Files.move(videoFile.toPath(), new File(outputDir, "video.mp4").toPath());
+                Files.move(download.toPath(), videoFile.toPath());
             }
 
             // Calculates how many frames the video has
             final int fps = videoQuality.get(0).fps();
             final int frames = fps * video.details().lengthSeconds();
-
-            // Save data about the video format
-            final YamlConfiguration dataConfig = new YamlConfiguration();
-            dataConfig.set("fps", fps);
-            dataConfig.set("height", plugin.getDisplayHeight());
-            dataConfig.set("width", plugin.getDisplayWidth());
-            dataConfig.save(new File(outputDir, "data.yml"));
-
-            // Play the video!
-            plugin.getVideoProcessor().play(player, videoFile, videoUrl, plugin.getDisplayHeight(), plugin.getDisplayWidth(), frames, fps, disableInterlacing);
+            saveDataAndPlay(player, videoFile, videoUrl, outputDir, frames, fps, disableInterlacing);
         } catch (final YoutubeException | IOException e) {
             player.sendMessage("Error downloading the video!");
             e.printStackTrace();
