@@ -43,7 +43,7 @@ public final class BufferedDisplayTask extends DisplayTask {
         final int[][] frame = frames.take();
 
         // Convert to json component
-        final IChatBaseComponent[] frameText = new IChatBaseComponent[frame.length / (interlace ? 2 : 1)];
+        final IChatBaseComponent[] frameText = new IChatBaseComponent[interlace ? frame.length / 2 : frame.length];
         if (interlace){
             for (int y = oddFrame ? 1 : 0; y < frame.length; y += 2){
                 frameText[y / 2] = dataToComponent(frame[y]);

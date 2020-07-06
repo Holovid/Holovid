@@ -38,7 +38,7 @@ public final class FileDisplayTask extends DisplayTask {
             final BufferedImage image = ImageIO.read(file);
             final int width = image.getWidth();
             final int height = image.getHeight();
-            final int interlacedHeight = image.getHeight() / (interlace ? 2 : 1);
+            final int interlacedHeight = interlace ? image.getHeight() / 2 : image.getHeight();
             final IChatBaseComponent[] frame = new IChatBaseComponent[interlacedHeight];
 
             final int[] rgbArray = image.getRGB(0, 0, width, height, null, 0, width);
