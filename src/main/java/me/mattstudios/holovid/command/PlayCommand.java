@@ -3,6 +3,7 @@ package me.mattstudios.holovid.command;
 import me.mattstudios.holovid.Holovid;
 import me.mattstudios.mf.annotations.Command;
 import me.mattstudios.mf.annotations.Completion;
+import me.mattstudios.mf.annotations.Optional;
 import me.mattstudios.mf.annotations.SubCommand;
 import me.mattstudios.mf.base.CommandBase;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -26,7 +27,7 @@ public final class PlayCommand extends CommandBase {
 
     @SubCommand("play")
     @Completion("#videos")
-    public void play(final Player player, final String folder) {
+    public void play(final Player player, final String folder, @Optional boolean disableInterlace) {
         if (plugin.getHologram() == null) {
             player.sendMessage("Use /holovid spawnscreen to spawn the armor stands first.");
             return;
@@ -49,7 +50,7 @@ public final class PlayCommand extends CommandBase {
                 .filter(file -> FilenameUtils.getExtension(file.getName()).equalsIgnoreCase("jpg"))
                 .sorted(Comparator.comparingInt(value -> Integer.parseInt(value.getName().substring(6).split("\\.")[0])))
                 .collect(Collectors.toList());
-        plugin.startTask(files, dataConfig.getInt("height"), dataConfig.getInt("fps", 30));
+        plugin.startTask(files, dataConfig.getInt("height"), dataConfig.getInt("fps", 30), !disableInterlace);
         player.sendMessage("Video task started!");
     }
 

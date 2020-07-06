@@ -36,14 +36,14 @@ public final class Holovid extends JavaPlugin {
     private Hologram hologram;
     private DisplayTask task;
 
-    private int displayHeight = 72;
-    private int displayWidth = 128;
+    private int displayHeight = 144;
+    private int displayWidth = 256;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
-        displayHeight = getConfig().getInt("display-height", 72);
-        displayWidth = getConfig().getInt("display-width", 128);
+        displayHeight = getConfig().getInt("display-height", 144);
+        displayWidth = getConfig().getInt("display-width", 256);
 
         // Loads the tasks util
         Task.init(this);
@@ -120,17 +120,17 @@ public final class Holovid extends JavaPlugin {
         return task;
     }
 
-    public void startTask(final List<File> files, final int height, final int fps) {
+    public void startTask(final List<File> files, final int height, final int fps, final boolean interlace) {
         prepareForTask(height);
 
-        this.task = new FileDisplayTask(this, true, files, fps);
+        this.task = new FileDisplayTask(this, true, files, fps, interlace);
         Task.async(task);
     }
 
-    public void startBufferedTask(final long startDelay, final int frames, final int height, final int fps) {
+    public void startBufferedTask(final long startDelay, final int frames, final int height, final int fps, final boolean interlace) {
         prepareForTask(height);
 
-        this.task = new BufferedDisplayTask(this, startDelay, true, frames, fps);
+        this.task = new BufferedDisplayTask(this, startDelay, true, frames, fps, interlace);
         Task.async(task);
     }
 
