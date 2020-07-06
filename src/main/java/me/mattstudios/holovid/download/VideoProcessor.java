@@ -1,9 +1,11 @@
 package me.mattstudios.holovid.download;
 
+import com.google.common.base.Preconditions;
 import me.mattstudios.holovid.Holovid;
 import me.mattstudios.holovid.display.BufferedDisplayTask;
 import me.mattstudios.holovid.utils.ImageUtils;
 import me.mattstudios.holovid.utils.Task;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jcodec.api.FrameGrab;
 import org.jcodec.api.JCodecException;
@@ -37,6 +39,8 @@ public final class VideoProcessor {
      */
     public void play(final Player player, final File videoFile, final URL videoUrl,
                      final int height, final int width, final int frames, final int fps, final boolean disableInterlacing) {
+        Preconditions.checkArgument(!Bukkit.isPrimaryThread());
+
         //TODO use videourl to request a resourcepack with sound
         try {
             player.sendMessage("Processing and displaying video...");

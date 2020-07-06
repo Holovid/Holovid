@@ -6,7 +6,9 @@ import com.github.kiulian.downloader.model.YoutubeVideo;
 import com.github.kiulian.downloader.model.formats.AudioVideoFormat;
 import com.github.kiulian.downloader.model.formats.VideoFormat;
 import com.github.kiulian.downloader.model.quality.VideoQuality;
+import com.google.common.base.Preconditions;
 import me.mattstudios.holovid.Holovid;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.io.File;
@@ -25,6 +27,8 @@ public final class YouTubeDownloader extends VideoDownloader {
     }
 
     public void download(final Player player, final URL videoUrl, final boolean disableInterlacing) {
+        Preconditions.checkArgument(!Bukkit.isPrimaryThread());
+
         // Gets the video ID
         final String id = videoUrl.getQuery().substring(2);
         try {
