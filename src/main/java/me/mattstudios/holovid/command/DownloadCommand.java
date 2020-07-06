@@ -1,6 +1,7 @@
 package me.mattstudios.holovid.command;
 
 import me.mattstudios.holovid.Holovid;
+import me.mattstudios.holovid.utils.Task;
 import me.mattstudios.mf.annotations.Command;
 import me.mattstudios.mf.annotations.Completion;
 import me.mattstudios.mf.annotations.Optional;
@@ -21,12 +22,14 @@ public final class DownloadCommand extends CommandBase {
 
     @SubCommand("download")
     @Completion("#empty")
-    public void download(final Player player, final URL videoUrl, final boolean instantPlay, @Optional final boolean disableInterlacing) {
-        if (instantPlay) {
-            plugin.stopTask();
+    public void download(final Player player, final URL videoUrl, @Optional final boolean disableInterlacing) {
+        if (plugin.getHologram() == null) {
+            player.sendMessage("Use /holovid spawnscreen to spawn the armor stands first.");
+            return;
         }
 
-        plugin.getVideoDownloader().download(player, videoUrl, instantPlay, disableInterlacing);
+        plugin.stopTask();
+        Task.async(() -> plugin.getVideoDownloader().download(player, videoUrl, disableInterlacing));
     }
 
 }
