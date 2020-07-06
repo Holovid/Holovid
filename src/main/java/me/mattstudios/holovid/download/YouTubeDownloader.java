@@ -43,7 +43,7 @@ public final class YouTubeDownloader implements VideoDownloader {
         downloader.setParserRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.121 Safari/537.36");
     }
 
-    public void download(final Player player, final URL videoUrl, final boolean instantPlay) {
+    public void download(final Player player, final URL videoUrl, final boolean instantPlay, final boolean disableinterlacing) {
         // TODO more website support, abstract parallel tasks out
         // Gets the video ID
         final String id = videoUrl.getQuery().substring(2);
@@ -134,7 +134,7 @@ public final class YouTubeDownloader implements VideoDownloader {
 
                 if (instantPlay) {
                     // Start instant replay slightly delayed
-                    plugin.startBufferedTask(2000, max, plugin.getDisplayHeight(), fps);
+                    plugin.startBufferedTask(2000, max, plugin.getDisplayHeight(), fps, !disableinterlacing);
                 }
 
                 // Resize and save images in parallel to the frame grabbing

@@ -14,8 +14,8 @@ public final class BufferedDisplayTask extends DisplayTask {
     private final long startDelay;
     private final int max;
 
-    public BufferedDisplayTask(final Holovid plugin, final long startDelay, final boolean repeat, final int max, final int fps) {
-        super(plugin, repeat, fps);
+    public BufferedDisplayTask(final Holovid plugin, final long startDelay, final boolean repeat, final int max, final int fps, final boolean interlace) {
+        super(plugin, repeat, fps, interlace);
         this.startDelay = startDelay;
         this.max = max;
 
@@ -43,9 +43,15 @@ public final class BufferedDisplayTask extends DisplayTask {
         final int[][] frame = frames.take();
 
         // Convert to json component
-        final IChatBaseComponent[] frameText = new IChatBaseComponent[frame.length];
-        for (int i = 0; i < frame.length; i++) {
-            frameText[i] = dataToComponent(frame[i]);
+        final IChatBaseComponent[] frameText = new IChatBaseComponent[frame.length / (interlace ? 2 : 1)];
+        if (interlace){
+            for (int y = oddFrame ? 1 : 0; y < frame.length; y += 2){
+                frameText[y / 2] = dataToComponent(frame[y]);
+            }
+        } else {
+            for (int i = 0; i < frame.length; i++) {
+                frameText[i] = dataToComponent(frame[i]);
+            }
         }
         return frameText;
     }

@@ -17,17 +17,21 @@ public abstract class DisplayTask implements Runnable {
     private final Holovid plugin;
     private final long frameDelayNanos;
     private final boolean repeat;
+    protected final boolean interlace;
+
     private long nextDisplayNanos;
+    protected boolean oddFrame;
     protected int frameCounter;
 
     private final Lock runningInfoLock = new ReentrantLock();
     private Thread runningThread;
     private boolean deadBeforeStarted;
 
-    protected DisplayTask(final Holovid plugin, final boolean repeat, final int fps) {
+    protected DisplayTask(final Holovid plugin, final boolean repeat, final int fps, final boolean interlace) {
         this.plugin = plugin;
         this.repeat = repeat;
         this.frameDelayNanos = (long) ((1000D / fps) * 1_000_000);
+        this.interlace = interlace;
     }
 
     @Override
@@ -79,10 +83,22 @@ public abstract class DisplayTask implements Runnable {
 
         // Set hologram lines
         final List<HologramLine> lines = plugin.getHologram().getLines();
-        for (int i = 0; i < frame.length; i++) {
-            final IChatBaseComponent line = frame[i];
-            final HologramLine hologramLine = lines.get(i);
-            hologramLine.updateText(line);
+        if (interlace){
+            final int x = oddFrame ? 1 : 0;
+            for (int i = 0; i < frame.length ; i++) {
+                final IChatBaseComponent line = frame[i];
+                final HologramLine hologramLine = lines.get(x + (i * 2));
+
+                hologramLine.updateText(line);
+            }
+
+            oddFrame = !oddFrame;
+        } else {
+            for (int i = 0; i < frame.length; i++) {
+                final IChatBaseComponent line = frame[i];
+                final HologramLine hologramLine = lines.get(i);
+                hologramLine.updateText(line);
+            }
         }
 
         if (++frameCounter == getMaxFrames()) {

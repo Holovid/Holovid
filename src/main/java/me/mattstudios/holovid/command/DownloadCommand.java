@@ -18,12 +18,12 @@ public final class DownloadCommand extends CommandBase {
     }
 
     @SubCommand("download")
-    public void download(final Player player, final URL videoUrl, final boolean instantPlay) {
+    public void download(final Player player, final URL videoUrl, final boolean instantPlay, final boolean disableinterlacing) {
         if (instantPlay) {
             plugin.stopTask();
         }
 
-        plugin.getVideoDownloader().download(player, videoUrl, instantPlay);
+        plugin.getVideoDownloader().download(player, videoUrl, instantPlay, disableinterlacing);
     }
 
 }
