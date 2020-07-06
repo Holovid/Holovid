@@ -27,7 +27,7 @@ public final class PlayCommand extends CommandBase {
 
     @SubCommand("play")
     @Completion("#videos")
-    public void play(final Player player, final String folder, boolean disableInterlace) {
+    public void play(final Player player, final String folder, @Optional boolean disableInterlace) {
         if (plugin.getHologram() == null) {
             player.sendMessage("Use /holovid spawnscreen to spawn the armor stands first.");
             return;
