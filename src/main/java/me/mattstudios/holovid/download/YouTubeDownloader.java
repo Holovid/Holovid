@@ -89,7 +89,8 @@ public final class YouTubeDownloader implements VideoDownloader {
 
                 threadLock.lock();
                 frameProcessingThread = Thread.currentThread();
-                pictures = new ArrayBlockingQueue<>(max);
+                // Limit to a few seconds of video if buffered
+                pictures = new ArrayBlockingQueue<>(instantPlay ? Holovid.PRE_RENDER_SECONDS * fps : max);
                 threadLock.unlock();
 
                 Task.async(() -> {
@@ -114,13 +115,18 @@ public final class YouTubeDownloader implements VideoDownloader {
                             last = picture;
                         }
 
-                        try {
-                            pictures.put(last);
-                        } catch (final InterruptedException e){
-                            return;
-                        }
-
                         if (Thread.interrupted()) return;
+
+                        if (instantPlay) {
+                            // Block if there already are a lot of pre-buffered frames
+                            try {
+                                pictures.put(last);
+                            } catch (final InterruptedException e) {
+                                return;
+                            }
+                        } else {
+                            pictures.add(last);
+                        }
                     }
 
                     threadLock.lock();

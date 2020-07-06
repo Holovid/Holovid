@@ -19,8 +19,8 @@ public final class BufferedDisplayTask extends DisplayTask {
         this.startDelay = startDelay;
         this.max = max;
 
-        // Buffer up to 30 seconds beforehand
-        this.bufferCapacity = 30 * fps;
+        // Buffer a few seconds of video beforehand
+        this.bufferCapacity = Holovid.PRE_RENDER_SECONDS * fps;
         this.frames = new ArrayBlockingQueue<>(bufferCapacity);
     }
 

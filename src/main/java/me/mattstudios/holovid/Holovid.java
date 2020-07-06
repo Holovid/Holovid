@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 
 public final class Holovid extends JavaPlugin {
 
+    public static final int PRE_RENDER_SECONDS = 20;
     private CommandManager commandManager;
     private VideoDownloader videoDownloader;
     private Hologram hologram;
