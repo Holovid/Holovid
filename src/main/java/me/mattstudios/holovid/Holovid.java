@@ -7,8 +7,8 @@ import me.mattstudios.holovid.command.SpawnScreenCommand;
 import me.mattstudios.holovid.command.StopCommand;
 import me.mattstudios.holovid.display.BufferedDisplayTask;
 import me.mattstudios.holovid.display.DisplayTask;
-import me.mattstudios.holovid.display.FileDisplayTask;
 import me.mattstudios.holovid.download.VideoDownloader;
+import me.mattstudios.holovid.download.VideoProcessor;
 import me.mattstudios.holovid.download.YouTubeDownloader;
 import me.mattstudios.holovid.hologram.Hologram;
 import me.mattstudios.holovid.listener.HologramListener;
@@ -25,13 +25,13 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.stream.Collectors;
 
 public final class Holovid extends JavaPlugin {
 
     public static final int PRE_RENDER_SECONDS = 20;
     private CommandManager commandManager;
+    private VideoProcessor videoProcessor;
     private VideoDownloader videoDownloader;
     private Hologram hologram;
     private DisplayTask task;
@@ -49,6 +49,7 @@ public final class Holovid extends JavaPlugin {
         Task.init(this);
 
         commandManager = new CommandManager(this);
+        videoProcessor = new VideoProcessor(this);
         videoDownloader = new YouTubeDownloader(this);
 
         getServer().getPluginManager().registerEvents(new HologramListener(this), this);
@@ -65,7 +66,7 @@ public final class Holovid extends JavaPlugin {
      * TODO should probably move this away
      */
     private void registerCommands() {
-        // Registers URL parameter fro commands
+        // Registers URL parameter for commands
         commandManager.getParameterHandler().register(URL.class, argument -> {
             if (argument == null) return new TypeResult(null);
             if (!UrlValidator.getInstance().isValid(argument.toString())) return new TypeResult(argument);
@@ -120,13 +121,6 @@ public final class Holovid extends JavaPlugin {
         return task;
     }
 
-    public void startTask(final List<File> files, final int height, final int fps, final boolean interlace) {
-        prepareForTask(height);
-
-        this.task = new FileDisplayTask(this, true, files, fps, interlace);
-        Task.async(task);
-    }
-
     public void startBufferedTask(final long startDelay, final int frames, final int height, final int fps, final boolean interlace) {
         prepareForTask(height);
 
@@ -162,10 +156,14 @@ public final class Holovid extends JavaPlugin {
             return false;
         }
 
-        videoDownloader.stopCurrentDownloading();
+        videoProcessor.stopCurrentTask();
         task.stop();
         task = null;
         return true;
+    }
+
+    public VideoProcessor getVideoProcessor() {
+        return videoProcessor;
     }
 
     public VideoDownloader getVideoDownloader() {
