@@ -114,17 +114,13 @@ public final class YouTubeDownloader implements VideoDownloader {
                             last = picture;
                         }
 
-                        if (instantPlay) {
-                            try {
-                                waitForQueueReduction();
-                            } catch (final InterruptedException e) {
-                                return;
-                            }
+                        try {
+                            pictures.put(last);
+                        } catch (final InterruptedException e){
+                            return;
                         }
 
                         if (Thread.interrupted()) return;
-
-                        pictures.add(last);
                     }
 
                     threadLock.lock();
@@ -143,7 +139,6 @@ public final class YouTubeDownloader implements VideoDownloader {
 
                     // Wait for frame to be loaded
                     final Picture picture = pictures.take();
-                    if (picture == null) break; // In case a frame errors and grabbing is done
 
                     if (instantPlay) {
                         addToBufferedDisplay(picture);
@@ -194,15 +189,6 @@ public final class YouTubeDownloader implements VideoDownloader {
         threadLock.unlock();
     }
 
-    private void waitForQueueReduction() throws InterruptedException {
-        // The cache shouldn't accumulate too much data
-        final BufferedDisplayTask task = (BufferedDisplayTask) plugin.getTask();
-        if (task == null) return;
-        while (task.isQueueFull()) {
-            Thread.sleep(5);
-        }
-    }
-
     private void addToBufferedDisplay(final Picture picture) throws IOException, InterruptedException {
         final int width = plugin.getDisplayWidth();
         final int height = plugin.getDisplayHeight();
@@ -216,16 +202,10 @@ public final class YouTubeDownloader implements VideoDownloader {
             System.arraycopy(rgbArray, i * width, row, 0, width);
         }
 
-        waitForQueueReduction();
-
         final BufferedDisplayTask task = (BufferedDisplayTask) plugin.getTask();
         if (task == null) return;
 
         // Block until the frame can be placed in the queue
-        try {
-            task.getFrameQueue().put(frame);
-        } catch (final InterruptedException e) {
-            e.printStackTrace();
-        }
+        task.getFrameQueue().put(frame);
     }
 }
