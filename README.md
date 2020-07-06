@@ -1,7 +1,7 @@
 # Holovid
 Holovid is an upcoming plugin that allows you to play videos in game.
 
-![ExampleImage](https://i.imgur.com/JmZn6gb.gif)
+![DemoImage](demo/demo.gif)
 
 [![BartyRealms](https://i.imgur.com/OCZBTxm.png)](https://bartyrealms.com/)
 
