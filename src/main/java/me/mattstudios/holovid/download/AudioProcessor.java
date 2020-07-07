@@ -69,4 +69,12 @@ public final class AudioProcessor {
         taskInfo = null;
         awaitingTask = -1;
     }
+
+    public void stopCurrentTask() {
+        if (awaitingTask != -1) {
+            plugin.getServer().getScheduler().cancelTask(awaitingTask);
+            taskInfo = null;
+            awaitingResourcepack.clear();
+        }
+    }
 }

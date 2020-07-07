@@ -19,6 +19,7 @@ import me.mattstudios.mf.base.CommandManager;
 import me.mattstudios.mf.base.components.TypeResult;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
@@ -38,11 +39,12 @@ public final class Holovid extends JavaPlugin {
     private VideoProcessor videoProcessor;
     private AudioProcessor audioProcessor;
     private VideoDownloader videoDownloader;
+    private VideoDownloader currentVideoDownloader;
     private Hologram hologram;
     private DisplayTask task;
 
-    private int displayHeight = 144;
-    private int displayWidth = 256;
+    private int displayHeight = 72;
+    private int displayWidth = 144;
 
     @Override
     public void onEnable() {
@@ -66,7 +68,7 @@ public final class Holovid extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        stopTask();
+        stopDisplayTask();
     }
 
     /**
@@ -80,7 +82,7 @@ public final class Holovid extends JavaPlugin {
             if (!UrlValidator.getInstance().isValid(argument.toString())) return new TypeResult(argument);
             try {
                 return new TypeResult(new URL(argument.toString()), argument);
-            } catch (MalformedURLException e) {
+            } catch (final MalformedURLException e) {
                 return new TypeResult(null);
             }
         });
@@ -114,6 +116,7 @@ public final class Holovid extends JavaPlugin {
 
     public void despawnHologram() {
         if (hologram != null) {
+            stopDisplayTask();
             hologram.despawn();
             hologram = null;
         }
@@ -130,6 +133,7 @@ public final class Holovid extends JavaPlugin {
     }
 
     public void startBufferedTask(final long startDelay, final int frames, final int height, final int fps, final boolean interlace) {
+        Preconditions.checkArgument(task == null);
         prepareForTask(height);
 
         this.task = new BufferedDisplayTask(this, startDelay, true, frames, fps, interlace);
@@ -138,8 +142,6 @@ public final class Holovid extends JavaPlugin {
 
     private void prepareForTask(final int height) {
         Preconditions.checkNotNull(hologram);
-        stopTask();
-
         if (hologram.getLines().size() < height) {
             // Expand hologram
             for (int i = hologram.getLines().size(); i < height; i++) {
@@ -159,14 +161,25 @@ public final class Holovid extends JavaPlugin {
      *
      * @return true if the task was running and has now been cancelled
      */
-    public boolean stopTask() {
-        if (task == null) {
-            return false;
+    public boolean stopDisplayTask() {
+        final boolean running = task != null;
+        if (running) {
+            task.stop();
+            task = null;
         }
 
         videoProcessor.stopCurrentTask();
-        task.stop();
-        task = null;
+        audioProcessor.stopCurrentTask();
+        return running;
+    }
+
+    /**
+     * @return true if a download is running and will be stopped before dislaying
+     */
+    public boolean stopDownload() {
+        if (currentVideoDownloader == null) return false;
+
+        currentVideoDownloader.cancelBeforeDisplay();
         return true;
     }
 
@@ -178,9 +191,24 @@ public final class Holovid extends JavaPlugin {
         return audioProcessor;
     }
 
-    public VideoDownloader getVideoDownloader() {
-        //TODO get different downloaders for different sites
-        return videoDownloader;
+    public void download(final Player player, final URL videoUrl, final boolean interlace) {
+        Preconditions.checkArgument(currentVideoDownloader == null);
+        final VideoDownloader videoDownloader = this.videoDownloader;  //TODO get different downloaders for different sites
+
+        this.currentVideoDownloader = videoDownloader;
+        videoDownloader.download(player, videoUrl, interlace);
+    }
+
+    /**
+     * @return downloader currently downloading a video, else null
+     */
+    @Nullable
+    public VideoDownloader getCurrentVideoDownloader() {
+        return currentVideoDownloader;
+    }
+
+    public void resetCurrentDownloader() {
+        this.currentVideoDownloader = null;
     }
 
     public int getDisplayHeight() {
@@ -190,5 +218,4 @@ public final class Holovid extends JavaPlugin {
     public int getDisplayWidth() {
         return displayWidth;
     }
-
 }

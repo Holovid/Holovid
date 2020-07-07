@@ -17,6 +17,11 @@ public final class SpawnScreenCommand extends CommandBase {
 
     @SubCommand("spawnscreen")
     public void spawnScreen(final Player player) {
+        if (plugin.getTask() != null) {
+            player.sendMessage("You cannot respawn the hologram while the display is running!");
+            return;
+        }
+
         plugin.spawnHologram(player.getLocation());
         player.sendMessage("Spawned!");
     }

@@ -103,7 +103,7 @@ public abstract class DisplayTask implements Runnable {
 
         if (++frameCounter == getMaxFrames()) {
             if (!repeat) {
-                plugin.stopTask();
+                plugin.stopDisplayTask();
                 return;
             }
 

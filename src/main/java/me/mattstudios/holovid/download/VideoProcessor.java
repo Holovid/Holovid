@@ -39,13 +39,13 @@ public final class VideoProcessor {
      * Should ALWAYS be called async!
      */
     public void play(final Player player, final File videoFile, final URL videoUrl, boolean prepareAudio,
-                     final int height, final int width, final int frames, final int fps, final boolean disableInterlacing) {
+                     final int height, final int width, final int frames, final int fps, final boolean interlace) {
         Preconditions.checkArgument(!Bukkit.isPrimaryThread());
 
         if (prepareAudio) {
             try {
                 player.sendMessage("Downloading audio data on an external host...");
-                plugin.getAudioProcessor().process(player, videoUrl, new TaskInfo(frames, height, fps, !disableInterlacing));
+                plugin.getAudioProcessor().process(player, videoUrl, new TaskInfo(frames, height, fps, interlace));
             } catch (final Exception e) {
                 prepareAudio = false;
                 player.sendMessage("Error trying to get sounddata - skipping to video display!");
@@ -53,7 +53,6 @@ public final class VideoProcessor {
             }
         }
 
-        //TODO use videourl to request a resourcepack with sound
         try {
             player.sendMessage("Processing and displaying video...");
 
@@ -106,7 +105,7 @@ public final class VideoProcessor {
             // Start task if no audio has to be processed
             if (!prepareAudio) {
                 // Start instant replay slightly delayed
-                plugin.startBufferedTask(2000, frames, height, fps, !disableInterlacing);
+                plugin.startBufferedTask(2000, frames, height, fps, interlace);
             }
 
             // Resize and save images in parallel to the frame grabbing
