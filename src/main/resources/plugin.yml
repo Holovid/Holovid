@@ -2,3 +2,4 @@ name: Holovid
 version: @version@
 main: me.mattstudios.holovid.Holovid
 api-version: 1.16
+depend: [ProtocolLib]
