@@ -25,7 +25,7 @@ public abstract class VideoDownloader {
     public abstract void download(Player player, URL videoUrl, final boolean disableinterlacing);
 
 
-    protected void saveDataAndPlay(final Player player, final File videoFile, final URL videoUrl, final File outputDir,
+    protected void saveDataAndPlay(final Player player, final File videoFile, final URL videoUrl, final File outputDir, final boolean prepareAudio,
                                    final int frames, final int fps, final boolean disableInterlacing) throws IOException {
         // Save data about the video format
         final YamlConfiguration dataConfig = new YamlConfiguration();
@@ -37,7 +37,7 @@ public abstract class VideoDownloader {
         dataConfig.save(new File(outputDir, "data.yml"));
 
         // Play the video!
-        plugin.getVideoProcessor().play(player, videoFile, videoUrl, plugin.getDisplayHeight(), plugin.getDisplayWidth(), frames, fps, disableInterlacing);
+        plugin.getVideoProcessor().play(player, videoFile, videoUrl, prepareAudio, plugin.getDisplayHeight(), plugin.getDisplayWidth(), frames, fps, disableInterlacing);
     }
 
 }

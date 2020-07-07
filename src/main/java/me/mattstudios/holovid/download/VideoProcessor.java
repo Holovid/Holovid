@@ -3,6 +3,7 @@ package me.mattstudios.holovid.download;
 import com.google.common.base.Preconditions;
 import me.mattstudios.holovid.Holovid;
 import me.mattstudios.holovid.display.BufferedDisplayTask;
+import me.mattstudios.holovid.display.TaskInfo;
 import me.mattstudios.holovid.utils.ImageUtils;
 import me.mattstudios.holovid.utils.Task;
 import org.bukkit.Bukkit;
@@ -37,9 +38,20 @@ public final class VideoProcessor {
      * Plays the video from the file.
      * Should ALWAYS be called async!
      */
-    public void play(final Player player, final File videoFile, final URL videoUrl,
+    public void play(final Player player, final File videoFile, final URL videoUrl, boolean prepareAudio,
                      final int height, final int width, final int frames, final int fps, final boolean disableInterlacing) {
         Preconditions.checkArgument(!Bukkit.isPrimaryThread());
+
+        if (prepareAudio) {
+            try {
+                player.sendMessage("Downloading audio data on an external host...");
+                plugin.getAudioProcessor().process(player, videoUrl, new TaskInfo(frames, height, fps, !disableInterlacing));
+            } catch (final Exception e) {
+                prepareAudio = false;
+                player.sendMessage("Error trying to get sounddata - skipping to video display!");
+                e.printStackTrace();
+            }
+        }
 
         //TODO use videourl to request a resourcepack with sound
         try {
@@ -91,8 +103,11 @@ public final class VideoProcessor {
                 threadLock.unlock();
             });
 
-            // Start instant replay slightly delayed
-            plugin.startBufferedTask(2000, frames, height, fps, !disableInterlacing);
+            // Start task if no audio has to be processed
+            if (!prepareAudio) {
+                // Start instant replay slightly delayed
+                plugin.startBufferedTask(2000, frames, height, fps, !disableInterlacing);
+            }
 
             // Resize and save images in parallel to the frame grabbing
             for (int frameCount = 0; frameCount < frames; frameCount++) {

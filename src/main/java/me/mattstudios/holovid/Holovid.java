@@ -7,16 +7,19 @@ import me.mattstudios.holovid.command.SpawnScreenCommand;
 import me.mattstudios.holovid.command.StopCommand;
 import me.mattstudios.holovid.display.BufferedDisplayTask;
 import me.mattstudios.holovid.display.DisplayTask;
+import me.mattstudios.holovid.download.AudioProcessor;
 import me.mattstudios.holovid.download.VideoDownloader;
 import me.mattstudios.holovid.download.VideoProcessor;
 import me.mattstudios.holovid.download.YouTubeDownloader;
 import me.mattstudios.holovid.hologram.Hologram;
 import me.mattstudios.holovid.listener.HologramListener;
+import me.mattstudios.holovid.listener.ResourcePackStatusListener;
 import me.mattstudios.holovid.utils.Task;
 import me.mattstudios.mf.base.CommandManager;
 import me.mattstudios.mf.base.components.TypeResult;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.bukkit.Location;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,9 +32,11 @@ import java.util.stream.Collectors;
 
 public final class Holovid extends JavaPlugin {
 
+    public static final int MAX_SECONDS_FOR_AUDIO = 60 * 60; // Don't even try changing this, the external server checks for it as well
     public static final int PRE_RENDER_SECONDS = 20;
     private CommandManager commandManager;
     private VideoProcessor videoProcessor;
+    private AudioProcessor audioProcessor;
     private VideoDownloader videoDownloader;
     private Hologram hologram;
     private DisplayTask task;
@@ -50,9 +55,12 @@ public final class Holovid extends JavaPlugin {
 
         commandManager = new CommandManager(this);
         videoProcessor = new VideoProcessor(this);
+        audioProcessor = new AudioProcessor(this);
         videoDownloader = new YouTubeDownloader(this);
 
-        getServer().getPluginManager().registerEvents(new HologramListener(this), this);
+        final PluginManager pluginManager = getServer().getPluginManager();
+        pluginManager.registerEvents(new HologramListener(this), this);
+        pluginManager.registerEvents(new ResourcePackStatusListener(this), this);
         registerCommands();
     }
 
@@ -164,6 +172,10 @@ public final class Holovid extends JavaPlugin {
 
     public VideoProcessor getVideoProcessor() {
         return videoProcessor;
+    }
+
+    public AudioProcessor getAudioProcessor() {
+        return audioProcessor;
     }
 
     public VideoDownloader getVideoDownloader() {

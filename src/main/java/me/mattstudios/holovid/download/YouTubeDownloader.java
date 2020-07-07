@@ -58,7 +58,8 @@ public final class YouTubeDownloader extends VideoDownloader {
             // Calculates how many frames the video has
             final int fps = videoQuality.get(0).fps();
             final int frames = fps * video.details().lengthSeconds();
-            saveDataAndPlay(player, videoFile, videoUrl, outputDir, frames, fps, disableInterlacing);
+            final boolean prepareAudio = fps * frames < Holovid.MAX_SECONDS_FOR_AUDIO;
+            saveDataAndPlay(player, videoFile, videoUrl, outputDir, prepareAudio, frames, fps, disableInterlacing);
         } catch (final YoutubeException | IOException e) {
             player.sendMessage("Error downloading the video!");
             e.printStackTrace();

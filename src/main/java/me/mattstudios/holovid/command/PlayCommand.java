@@ -62,7 +62,8 @@ public final class PlayCommand extends CommandBase {
         final int frames = dataConfig.getInt("frames");
         final int height = dataConfig.getInt("height");
         final int width = dataConfig.getInt("width");
-        Task.async(() -> plugin.getVideoProcessor().play(player, videoFile, url, height, width, frames, fps, disableInterlace));
+        final boolean requestSoundData = fps * frames < Holovid.MAX_SECONDS_FOR_AUDIO;
+        Task.async(() -> plugin.getVideoProcessor().play(player, videoFile, url, requestSoundData, height, width, frames, fps, disableInterlace));
     }
 
 }
