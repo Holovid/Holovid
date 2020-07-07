@@ -30,7 +30,8 @@ public abstract class DisplayTask implements Runnable {
     protected DisplayTask(final Holovid plugin, final boolean repeat, final int fps, final boolean interlace) {
         this.plugin = plugin;
         this.repeat = repeat;
-        this.frameDelayNanos = (long) ((1000D / fps) * 1_000_000);
+        // 1000ms to nanos
+        this.frameDelayNanos = (1000L * 1_000_000L) / fps;
         this.interlace = interlace;
     }
 
@@ -83,9 +84,9 @@ public abstract class DisplayTask implements Runnable {
 
         // Set hologram lines
         final List<HologramLine> lines = plugin.getHologram().getLines();
-        if (interlace){
+        if (interlace) {
             final int x = oddFrame ? 1 : 0;
-            for (int i = 0; i < frame.length ; i++) {
+            for (int i = 0; i < frame.length; i++) {
                 final IChatBaseComponent line = frame[i];
                 final HologramLine hologramLine = lines.get(x + (i * 2));
 

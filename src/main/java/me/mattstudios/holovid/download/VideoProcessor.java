@@ -18,6 +18,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.channels.ClosedByInterruptException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -75,6 +76,8 @@ public final class VideoProcessor {
                     final Picture picture;
                     try {
                         picture = grab.getNativeFrame();
+                    } catch (final ClosedByInterruptException e) {
+                        return;
                     } catch (final IOException e) {
                         e.printStackTrace();
                         // Interrupt threads on error
@@ -155,7 +158,6 @@ public final class VideoProcessor {
         }
 
         final BufferedDisplayTask task = (BufferedDisplayTask) plugin.getTask();
-        if (task == null) return;
 
         // Block until the frame can be placed in the queue
         task.getFrameQueue().put(frame);

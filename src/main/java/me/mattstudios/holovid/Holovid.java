@@ -164,6 +164,9 @@ public final class Holovid extends JavaPlugin {
     public boolean stopDisplayTask() {
         final boolean running = task != null;
         if (running) {
+            for (final Player player : getServer().getOnlinePlayers()) {
+                player.stopSound("holovid.video");
+            }
             task.stop();
             task = null;
         }

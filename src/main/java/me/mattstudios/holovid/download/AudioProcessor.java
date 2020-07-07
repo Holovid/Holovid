@@ -2,6 +2,9 @@ package me.mattstudios.holovid.download;
 
 import me.mattstudios.holovid.Holovid;
 import me.mattstudios.holovid.display.TaskInfo;
+import me.mattstudios.holovid.hologram.Hologram;
+import org.bukkit.Location;
+import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 
 import java.io.BufferedReader;
@@ -57,17 +60,22 @@ public final class AudioProcessor {
         }, 20 * 15).getTaskId();
     }
 
+    private void startTask() {
+        plugin.startBufferedTask(0, taskInfo.getFrames(), taskInfo.getHeight(), taskInfo.getFps(), taskInfo.interlacing());
+        taskInfo = null;
+        awaitingTask = -1;
+
+        final Hologram hologram = plugin.getHologram();
+        final Location location = hologram.getBaseLocation().add(0, 0.225D * (hologram.getLines().size() / 2D), 0);
+        // Set a high volume to workaround attenuation
+        location.getWorld().playSound(location, "holovid.video", SoundCategory.MASTER, 40, 1);
+    }
+
     public void removeAwaiting(final Player player) {
         if (awaitingResourcepack.remove(player.getUniqueId()) && awaitingResourcepack.isEmpty()) {
             plugin.getServer().getScheduler().cancelTask(awaitingTask);
             startTask();
         }
-    }
-
-    private void startTask() {
-        plugin.startBufferedTask(0, taskInfo.getFrames(), taskInfo.getHeight(), taskInfo.getFps(), taskInfo.interlacing());
-        taskInfo = null;
-        awaitingTask = -1;
     }
 
     public void stopCurrentTask() {
