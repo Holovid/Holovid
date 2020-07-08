@@ -62,6 +62,10 @@ public abstract class VideoDownloader {
         plugin.getVideoProcessor().play(player, videoFile, videoUrl, prepareAudio, plugin.getDisplayHeight(), plugin.getDisplayWidth(), frames, fps, interlace);
     }
 
+    protected File getOutputDirForTitle(final String title) {
+        return new File(plugin.getDataFolder(), "saves/" + title.replaceAll("[^A-Za-z0-9]", ""));
+    }
+
     public void cancelBeforeDisplay() {
         cancelBeforeDisplay = true;
     }

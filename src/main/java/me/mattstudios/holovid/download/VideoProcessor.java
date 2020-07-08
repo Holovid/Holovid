@@ -10,6 +10,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jcodec.api.FrameGrab;
 import org.jcodec.api.JCodecException;
+import org.jcodec.common.io.FileChannelWrapper;
 import org.jcodec.common.io.NIOUtils;
 import org.jcodec.common.model.Picture;
 import org.jcodec.scale.AWTUtil;
@@ -54,11 +55,11 @@ public final class VideoProcessor {
             }
         }
 
-        try {
+        try (final FileChannelWrapper in = NIOUtils.readableChannel(videoFile)) { // Make sure this will be closed
             player.sendMessage("Processing and displaying video...");
 
             // Starts the frame grabber
-            final FrameGrab grab = FrameGrab.createFrameGrab(NIOUtils.readableChannel(videoFile));
+            final FrameGrab grab = FrameGrab.createFrameGrab(in);
 
             threadLock.lock();
             frameProcessingThread = Thread.currentThread();
@@ -136,9 +137,11 @@ public final class VideoProcessor {
         threadLock.lock();
         if (grabbingThread != null) {
             grabbingThread.interrupt();
+            grabbingThread = null;
         }
         if (frameProcessingThread != null) {
             frameProcessingThread.interrupt();
+            frameProcessingThread = null;
         }
         if (pictures != null) {
             pictures.clear();

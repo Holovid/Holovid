@@ -30,26 +30,32 @@ public final class YouTubeDownloader extends VideoDownloader {
         try {
             final YoutubeVideo video = downloader.getVideo(id);
 
-            // Gets the video format and audio format
-            final List<AudioVideoFormat> videoWithAudioFormats = video.videoWithAudioFormats();
-            final List<VideoFormat> videoQuality = video.findVideoWithQuality(VideoQuality.tiny);
+            final File outputDir = getOutputDirForTitle(video.details().title());
+            final File videoFile = new File(outputDir, "video.mp4");
+            if (videoFile.exists()) {
+                // Play video from saved file
+                final File dataFile = new File(outputDir, "data.yml");
+                if (!dataFile.exists()) {
+                    player.sendMessage("Could not find data.yml file in " + outputDir.getName() + " directory!");
+                    return;
+                }
 
-            final File outputDir = new File(plugin.getDataFolder(), "saves/" + video.details().title().replaceAll("[^A-Za-z0-9]", ""));
+                plugin.playVideoFromSave(player, videoFile, dataFile, interlace);
+                return;
+            }
 
             // Gets the format to use on the download (this one has been the only one to work so far)
+            final List<AudioVideoFormat> videoWithAudioFormats = video.videoWithAudioFormats();
             final AudioVideoFormat format = videoWithAudioFormats.get(0);
 
             // Downloads the video into the videos dir
-            final File videoFile = new File(outputDir, "video.mp4");
-            if (!videoFile.exists() || !videoFile.isFile()) {
-                // Download if it is not already in the videos folder
-                final File download = video.download(format, outputDir);
+            final File download = video.download(format, outputDir);
 
-                // Rename for easier access
-                Files.move(download.toPath(), videoFile.toPath());
-            }
+            // Rename for easier access
+            Files.move(download.toPath(), videoFile.toPath());
 
             // Calculates how many frames the video has
+            final List<VideoFormat> videoQuality = video.findVideoWithQuality(VideoQuality.tiny);
             final int fps = videoQuality.get(0).fps();
             final int frames = fps * video.details().lengthSeconds();
             final boolean prepareAudio = fps * frames < Holovid.MAX_SECONDS_FOR_AUDIO;

@@ -1,18 +1,14 @@
 package me.mattstudios.holovid.command;
 
 import me.mattstudios.holovid.Holovid;
-import me.mattstudios.holovid.utils.Task;
 import me.mattstudios.mf.annotations.Command;
 import me.mattstudios.mf.annotations.Completion;
 import me.mattstudios.mf.annotations.Optional;
 import me.mattstudios.mf.annotations.SubCommand;
 import me.mattstudios.mf.base.CommandBase;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
 import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
 
 @Command("holovid")
 public final class PlayCommand extends CommandBase {
@@ -47,24 +43,7 @@ public final class PlayCommand extends CommandBase {
             return;
         }
 
-        final YamlConfiguration dataConfig = YamlConfiguration.loadConfiguration(dataFile);
-        final URL url;
-        try {
-            url = new URL(dataConfig.getString("video-url"));
-        } catch (final MalformedURLException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        plugin.stopDownload();
-        plugin.stopDisplayTask();
-
-        final int fps = dataConfig.getInt("fps");
-        final int frames = dataConfig.getInt("frames");
-        final int height = dataConfig.getInt("height");
-        final int width = dataConfig.getInt("width");
-        final boolean requestSoundData = fps * frames < Holovid.MAX_SECONDS_FOR_AUDIO;
-        Task.async(() -> plugin.getVideoProcessor().play(player, videoFile, url, requestSoundData, height, width, frames, fps, !disableInterlace));
+        plugin.playVideoFromSave(player, videoFile, dataFile, !disableInterlace);
     }
 
 }

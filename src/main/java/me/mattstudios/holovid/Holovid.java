@@ -19,6 +19,7 @@ import me.mattstudios.mf.base.CommandManager;
 import me.mattstudios.mf.base.components.TypeResult;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.bukkit.Location;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -44,7 +45,7 @@ public final class Holovid extends JavaPlugin {
     private DisplayTask task;
 
     private int displayHeight = 72;
-    private int displayWidth = 144;
+    private int displayWidth = 128;
 
     @Override
     public void onEnable() {
@@ -104,6 +105,27 @@ public final class Holovid extends JavaPlugin {
 
     }
 
+    public void playVideoFromSave(final Player player, final File videoFile, final File dataFile, final boolean interlace) {
+        final YamlConfiguration dataConfig = YamlConfiguration.loadConfiguration(dataFile);
+        final URL url;
+        try {
+            url = new URL(dataConfig.getString("video-url"));
+        } catch (final MalformedURLException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        stopDownload();
+        stopDisplayTask();
+
+        final int fps = dataConfig.getInt("fps");
+        final int frames = dataConfig.getInt("frames");
+        final int height = dataConfig.getInt("height");
+        final int width = dataConfig.getInt("width");
+        final boolean requestSoundData = fps * frames < Holovid.MAX_SECONDS_FOR_AUDIO;
+        Task.async(() -> videoProcessor.play(player, videoFile, url, requestSoundData, height, width, frames, fps, interlace));
+    }
+
     public void spawnHologram(final Location location) {
         // Despawn old holograms if present
         despawnHologram();
@@ -136,7 +158,7 @@ public final class Holovid extends JavaPlugin {
         Preconditions.checkArgument(task == null);
         prepareForTask(height);
 
-        this.task = new BufferedDisplayTask(this, startDelay, true, frames, fps, interlace);
+        this.task = new BufferedDisplayTask(this, startDelay, false, frames, fps, interlace);
         Task.async(task);
     }
 
