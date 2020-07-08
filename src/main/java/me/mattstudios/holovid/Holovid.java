@@ -44,14 +44,16 @@ public final class Holovid extends JavaPlugin {
     private Hologram hologram;
     private DisplayTask task;
 
-    private int displayHeight = 72;
-    private int displayWidth = 128;
+    private int displayHeight;
+    private int displayWidth;
+    private boolean shouldRequestAudio;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         displayHeight = getConfig().getInt("display-height", 144);
         displayWidth = getConfig().getInt("display-width", 256);
+        shouldRequestAudio = getConfig().getBoolean("request-audio");
 
         // Loads the tasks util
         Task.init(this);
@@ -242,5 +244,9 @@ public final class Holovid extends JavaPlugin {
 
     public int getDisplayWidth() {
         return displayWidth;
+    }
+
+    public boolean shouldRequestAudio() {
+        return shouldRequestAudio;
     }
 }
