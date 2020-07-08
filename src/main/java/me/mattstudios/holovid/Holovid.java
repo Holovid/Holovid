@@ -124,7 +124,7 @@ public final class Holovid extends JavaPlugin {
         final int frames = dataConfig.getInt("frames");
         final int height = dataConfig.getInt("height");
         final int width = dataConfig.getInt("width");
-        final boolean requestSoundData = fps * frames < Holovid.MAX_SECONDS_FOR_AUDIO;
+        final boolean requestSoundData = frames / fps < Holovid.MAX_SECONDS_FOR_AUDIO;
         Task.async(() -> videoProcessor.play(player, videoFile, url, requestSoundData, height, width, frames, fps, interlace));
     }
 

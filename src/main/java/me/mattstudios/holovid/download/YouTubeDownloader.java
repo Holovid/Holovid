@@ -58,7 +58,7 @@ public final class YouTubeDownloader extends VideoDownloader {
             final List<VideoFormat> videoQuality = video.findVideoWithQuality(VideoQuality.tiny);
             final int fps = videoQuality.get(0).fps();
             final int frames = fps * video.details().lengthSeconds();
-            final boolean prepareAudio = fps * frames < Holovid.MAX_SECONDS_FOR_AUDIO;
+            final boolean prepareAudio = frames / fps < Holovid.MAX_SECONDS_FOR_AUDIO;
             saveDataAndPlay(player, videoFile, videoUrl, outputDir, prepareAudio, frames, fps, interlace);
         } catch (final YoutubeException | IOException e) {
             player.sendMessage("Error downloading the video!");

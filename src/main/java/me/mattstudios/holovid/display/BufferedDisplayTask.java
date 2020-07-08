@@ -10,7 +10,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 public final class BufferedDisplayTask extends DisplayTask {
 
     private final ArrayBlockingQueue<int[][]> frames;
-    private final int bufferCapacity;
     private final long startDelay;
     private final int max;
 
@@ -20,8 +19,7 @@ public final class BufferedDisplayTask extends DisplayTask {
         this.max = max;
 
         // Buffer a few seconds of video beforehand
-        this.bufferCapacity = Holovid.PRE_RENDER_SECONDS * fps;
-        this.frames = new ArrayBlockingQueue<>(bufferCapacity);
+        this.frames = new ArrayBlockingQueue<>(Holovid.PRE_RENDER_SECONDS * fps);
     }
 
     @Override
@@ -44,8 +42,8 @@ public final class BufferedDisplayTask extends DisplayTask {
 
         // Convert to json component
         final IChatBaseComponent[] frameText = new IChatBaseComponent[interlace ? frame.length / 2 : frame.length];
-        if (interlace){
-            for (int y = oddFrame ? 1 : 0; y < frame.length; y += 2){
+        if (interlace) {
+            for (int y = oddFrame ? 1 : 0; y < frame.length; y += 2) {
                 frameText[y / 2] = dataToComponent(frame[y]);
             }
         } else {
@@ -58,10 +56,6 @@ public final class BufferedDisplayTask extends DisplayTask {
 
     public ArrayBlockingQueue<int[][]> getFrameQueue() {
         return frames;
-    }
-
-    public boolean isQueueFull() {
-        return frames.size() >= bufferCapacity;
     }
 
     private IChatBaseComponent dataToComponent(final int[] row) {

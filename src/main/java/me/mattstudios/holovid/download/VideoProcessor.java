@@ -94,7 +94,15 @@ public final class VideoProcessor {
                     if (Thread.interrupted()) return;
 
                     // Block if there already are a lot of pre-buffered frames
+                    final BufferedDisplayTask task = (BufferedDisplayTask) plugin.getTask();
                     try {
+                        if (task != null) {
+                            // Also wait for the frames queue as well - hack to fix random speedups when the frame queue is full
+                            while (task.getFrameQueue().remainingCapacity() <= 1) {
+                                Thread.sleep(5);
+                            }
+                        }
+
                         pictures.put(last);
                     } catch (final InterruptedException e) {
                         return;
@@ -161,6 +169,7 @@ public final class VideoProcessor {
         }
 
         final BufferedDisplayTask task = (BufferedDisplayTask) plugin.getTask();
+        if (task == null) return;
 
         // Block until the frame can be placed in the queue
         task.getFrameQueue().put(frame);
