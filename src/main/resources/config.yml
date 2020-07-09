@@ -2,6 +2,3 @@
 # You may go lower or higher (e.g. 256x144), but higher values will cause the client to have a harder time processing all of the incoming data.
 display-height: 72
 display-width: 128
-
-# Disable this if the external audio server is down / you don't want to have audio resourcepacks.
-request-audio: true

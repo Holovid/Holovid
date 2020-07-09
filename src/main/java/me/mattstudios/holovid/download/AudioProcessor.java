@@ -1,8 +1,10 @@
 package me.mattstudios.holovid.download;
 
+import com.google.gson.Gson;
 import me.mattstudios.holovid.Holovid;
 import me.mattstudios.holovid.display.TaskInfo;
 import me.mattstudios.holovid.hologram.Hologram;
+import me.mattstudios.holovid.model.ResourcePackResult;
 import org.bukkit.Location;
 import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
@@ -19,6 +21,7 @@ import java.util.UUID;
 
 public final class AudioProcessor {
 
+    private static final Gson GSON = new Gson();
     private final Set<UUID> awaitingResourcepack = new HashSet<>();
     private final Holovid plugin;
     private TaskInfo taskInfo;
@@ -31,21 +34,19 @@ public final class AudioProcessor {
     public void process(final Player player, final URL videoUrl, final TaskInfo taskInfo) throws IOException {
         final String stringUrl = videoUrl.toExternalForm();
         final HttpURLConnection c = (HttpURLConnection) new URL("https://holov.id/resourcepack/download/resource?videoUrl=" + stringUrl).openConnection();
-        final String downloadLink;
+        final ResourcePackResult data;
         final InputStream in = c.getInputStream();
         if (c.getResponseCode() != 200) {
             throw new RuntimeException("Error requestion audio data for " + videoUrl);
         }
 
         try (final BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
-            downloadLink = reader.readLine();
+            data = GSON.fromJson(reader, ResourcePackResult.class);
         }
 
         player.sendMessage("The video display will start once all players in tracking range have accepted and downloaded the resourcepack!");
-
-        final String hash = stringUrl.length() > 40 ? stringUrl.substring(0, 40) : stringUrl;
         for (final Player p : plugin.getHologram().getViewers()) {
-            p.setResourcePack(downloadLink, hash);
+            p.setResourcePack(data.getUrl(), data.getHash());
             awaitingResourcepack.add(p.getUniqueId());
         }
 

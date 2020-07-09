@@ -44,7 +44,8 @@ public final class VideoProcessor {
                      final int height, final int width, final int frames, final int fps, final boolean interlace) {
         Preconditions.checkArgument(!Bukkit.isPrimaryThread());
 
-        if (prepareAudio && plugin.shouldRequestAudio()) {
+        prepareAudio = prepareAudio && plugin.shouldRequestAudio();
+        if (prepareAudio) {
             try {
                 player.sendMessage("Downloading audio data on an external host...");
                 plugin.getAudioProcessor().process(player, videoUrl, new TaskInfo(frames, height, fps, interlace));
