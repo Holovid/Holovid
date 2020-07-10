@@ -27,9 +27,13 @@ public final class DownloadCommand extends CommandBase {
             player.sendMessage("Use /holovid spawnscreen to spawn the armor stands first.");
             return;
         }
+        if (plugin.getCurrentVideoDownloader() != null) {
+            player.sendMessage("You have to wait for the current download to finish before starting a new one.");
+            return;
+        }
 
-        plugin.stopTask();
-        Task.async(() -> plugin.getVideoDownloader().download(player, videoUrl, disableInterlacing));
+        plugin.stopDisplayTask();
+        Task.async(() -> plugin.download(player, videoUrl, !disableInterlacing));
     }
 
 }

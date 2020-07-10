@@ -2,13 +2,14 @@ package me.mattstudios.holovid.download;
 
 import com.google.common.base.Preconditions;
 import me.mattstudios.holovid.Holovid;
-import me.mattstudios.holovid.display.BufferedDisplayTask;
+import me.mattstudios.holovid.display.TaskInfo;
 import me.mattstudios.holovid.utils.ImageUtils;
 import me.mattstudios.holovid.utils.Task;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jcodec.api.FrameGrab;
 import org.jcodec.api.JCodecException;
+import org.jcodec.common.io.FileChannelWrapper;
 import org.jcodec.common.io.NIOUtils;
 import org.jcodec.common.model.Picture;
 import org.jcodec.scale.AWTUtil;
@@ -17,6 +18,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.channels.ClosedByInterruptException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -26,6 +28,7 @@ public final class VideoProcessor {
     private final Lock threadLock = new ReentrantLock();
     private final Holovid plugin;
     private ArrayBlockingQueue<Picture> pictures;
+    private ArrayBlockingQueue<int[][]> frameQueue;
     private Thread grabbingThread;
     private Thread frameProcessingThread;
 
@@ -37,21 +40,34 @@ public final class VideoProcessor {
      * Plays the video from the file.
      * Should ALWAYS be called async!
      */
-    public void play(final Player player, final File videoFile, final URL videoUrl,
-                     final int height, final int width, final int frames, final int fps, final boolean disableInterlacing) {
+    public void play(final Player player, final File videoFile, final URL videoUrl, boolean prepareAudio,
+                     final int height, final int width, final int frames, final int fps, final boolean interlace) {
         Preconditions.checkArgument(!Bukkit.isPrimaryThread());
 
-        //TODO use videourl to request a resourcepack with sound
-        try {
+        prepareAudio = prepareAudio && plugin.shouldRequestAudio();
+        if (prepareAudio) {
+            try {
+                player.sendMessage("Downloading audio data on an external host...");
+                plugin.getAudioProcessor().process(player, videoUrl, new TaskInfo(frames, height, fps, interlace));
+            } catch (final Exception e) {
+                prepareAudio = false;
+                player.sendMessage("Error trying to get sounddata - skipping to video display!");
+                e.printStackTrace();
+            }
+        }
+
+        try (final FileChannelWrapper in = NIOUtils.readableChannel(videoFile)) { // Make sure this will be closed
             player.sendMessage("Processing and displaying video...");
 
             // Starts the frame grabber
-            final FrameGrab grab = FrameGrab.createFrameGrab(NIOUtils.readableChannel(videoFile));
+            final FrameGrab grab = FrameGrab.createFrameGrab(in);
 
             threadLock.lock();
             frameProcessingThread = Thread.currentThread();
-            // Limit to a few seconds of video if buffered
-            pictures = new ArrayBlockingQueue<>(Holovid.PRE_RENDER_SECONDS * fps);
+            // Buffer a few seconds of video beforehand
+            final int capacity = Holovid.PRE_RENDER_SECONDS * fps;
+            this.pictures = new ArrayBlockingQueue<>(capacity);
+            this.frameQueue = new ArrayBlockingQueue<>(capacity);
             threadLock.unlock();
 
             Task.async(() -> {
@@ -64,6 +80,8 @@ public final class VideoProcessor {
                     final Picture picture;
                     try {
                         picture = grab.getNativeFrame();
+                    } catch (final ClosedByInterruptException e) {
+                        return;
                     } catch (final IOException e) {
                         e.printStackTrace();
                         // Interrupt threads on error
@@ -80,6 +98,11 @@ public final class VideoProcessor {
 
                     // Block if there already are a lot of pre-buffered frames
                     try {
+                        // Also wait for the frames queue as well - hack to fix random speedups when the frame queue is full
+                        while (frameQueue.remainingCapacity() <= 1) {
+                            Thread.sleep(5);
+                        }
+
                         pictures.put(last);
                     } catch (final InterruptedException e) {
                         return;
@@ -91,12 +114,15 @@ public final class VideoProcessor {
                 threadLock.unlock();
             });
 
-            // Start instant replay slightly delayed
-            plugin.startBufferedTask(2000, frames, height, fps, !disableInterlacing);
+            // Start task if no audio has to be processed
+            if (!prepareAudio) {
+                // Start instant replay slightly delayed
+                plugin.startBufferedTask(2000, frames, height, fps, interlace);
+            }
 
             // Resize and save images in parallel to the frame grabbing
             for (int frameCount = 0; frameCount < frames; frameCount++) {
-                if (Thread.interrupted()) return;
+                if (Thread.interrupted() || pictures == null) return;
 
                 // Wait for frame to be loaded
                 final Picture picture = pictures.take();
@@ -119,13 +145,19 @@ public final class VideoProcessor {
         threadLock.lock();
         if (grabbingThread != null) {
             grabbingThread.interrupt();
+            grabbingThread = null;
         }
         if (frameProcessingThread != null) {
             frameProcessingThread.interrupt();
+            frameProcessingThread = null;
         }
         if (pictures != null) {
             pictures.clear();
             pictures = null;
+        }
+        if (frameQueue != null) {
+            frameQueue.clear();
+            frameQueue = null;
         }
         threadLock.unlock();
     }
@@ -140,10 +172,13 @@ public final class VideoProcessor {
             System.arraycopy(rgbArray, i * width, row, 0, width);
         }
 
-        final BufferedDisplayTask task = (BufferedDisplayTask) plugin.getTask();
-        if (task == null) return;
+        if (Thread.interrupted()) return;
 
         // Block until the frame can be placed in the queue
-        task.getFrameQueue().put(frame);
+        frameQueue.put(frame);
+    }
+
+    public ArrayBlockingQueue<int[][]> getFrameQueue() {
+        return frameQueue;
     }
 }

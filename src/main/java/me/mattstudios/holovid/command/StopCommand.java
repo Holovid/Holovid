@@ -16,8 +16,13 @@ public final class StopCommand extends CommandBase {
     }
 
     @SubCommand("stop")
-    public void spawnScreen(final Player player) {
-        if (!plugin.stopTask()){
+    public void stop(final Player player) {
+        if (plugin.stopDownload()) {
+            player.sendMessage("The current display will be cancelled as soon as possible - you will receive another message when that happens.");
+            return;
+        }
+
+        if (!plugin.stopDisplayTask()) {
             player.sendMessage("There is no video playing at the moment.");
             return;
         }
