@@ -59,7 +59,7 @@ public final class Holovid extends JavaPlugin {
         // Loads the tasks util
         Task.init(this);
 
-        commandManager = new CommandManager(this);
+        commandManager = new CommandManager(this, true);
         videoProcessor = new VideoProcessor(this);
         audioProcessor = new AudioProcessor(this);
         videoDownloader = new YouTubeDownloader(this);
@@ -97,6 +97,9 @@ public final class Holovid extends JavaPlugin {
             if (files == null) return Collections.emptyList();
             return Arrays.asList(files).parallelStream().filter(File::isDirectory).map(File::getName).collect(Collectors.toList());
         });
+
+        // Leaving this here until maven central stops hiccuping
+        commandManager.getCompletionHandler().register("#boolean", input -> Arrays.asList("false", "true"));
 
         // Registers all the commands
         Arrays.asList(
