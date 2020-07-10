@@ -19,6 +19,7 @@ import me.mattstudios.mf.base.CommandManager;
 import me.mattstudios.mf.base.components.TypeResult;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.bukkit.Location;
+import org.bukkit.SoundCategory;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
@@ -189,7 +190,7 @@ public final class Holovid extends JavaPlugin {
         final boolean running = task != null;
         if (running) {
             for (final Player player : getServer().getOnlinePlayers()) {
-                player.stopSound("holovid.video");
+                player.stopSound("holovid.video", SoundCategory.RECORDS);
             }
             task.stop();
             task = null;

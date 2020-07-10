@@ -33,13 +33,14 @@ public final class AudioProcessor {
 
     public void process(final Player player, final URL videoUrl, final TaskInfo taskInfo) throws IOException {
         final String stringUrl = videoUrl.toExternalForm();
-        final HttpURLConnection c = (HttpURLConnection) new URL("https://holov.id/resourcepack/download/resource?videoUrl=" + stringUrl).openConnection();
-        final ResourcePackResult data;
+        final HttpURLConnection c = (HttpURLConnection) new URL("https://holov.id/resourcepack/download/resource").openConnection();
+        c.setRequestProperty("videoUrl", stringUrl);
         final InputStream in = c.getInputStream();
         if (c.getResponseCode() != 200) {
             throw new RuntimeException("Error requestion audio data for " + videoUrl);
         }
 
+        final ResourcePackResult data;
         try (final BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
             data = GSON.fromJson(reader, ResourcePackResult.class);
         }
@@ -62,14 +63,27 @@ public final class AudioProcessor {
     }
 
     private void startTask() {
-        plugin.startBufferedTask(0, taskInfo.getFrames(), taskInfo.getHeight(), taskInfo.getFps(), taskInfo.interlacing());
-        taskInfo = null;
-        awaitingTask = -1;
-
         final Hologram hologram = plugin.getHologram();
         final Location location = hologram.getBaseLocation().add(0, 0.225D * (hologram.getLines().size() / 2D), 0);
-        // Set a high volume to workaround attenuation
-        location.getWorld().playSound(location, "holovid.video", SoundCategory.MASTER, 40, 1);
+
+        // Make the client load in the audio first with volume 0
+        location.getWorld().playSound(location, "holovid.video", SoundCategory.RECORDS, 0.001F, 1);
+
+        // Run later because of the audio loading
+        final TaskInfo taskInfo = this.taskInfo;
+        plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, () -> {
+            // Stop the loading sound
+            for (final Player player : plugin.getServer().getOnlinePlayers()) {
+                player.stopSound("holovid.video", SoundCategory.RECORDS);
+            }
+
+            plugin.startBufferedTask(0, taskInfo.getFrames(), taskInfo.getHeight(), taskInfo.getFps(), taskInfo.interlacing());
+            // Now actually start the sound (set a high volume to workaround attenuation)
+            location.getWorld().playSound(location, "holovid.video", SoundCategory.RECORDS, 20, 1);
+        }, 30);
+
+        this.taskInfo = null;
+        awaitingTask = -1;
     }
 
     public void removeAwaiting(final Player player) {

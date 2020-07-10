@@ -5,11 +5,8 @@ import net.minecraft.server.v1_16_R1.ChatBaseComponent;
 import net.minecraft.server.v1_16_R1.ChatComponentText;
 import net.minecraft.server.v1_16_R1.IChatBaseComponent;
 
-import java.util.concurrent.ArrayBlockingQueue;
-
 public final class BufferedDisplayTask extends DisplayTask {
 
-    private final ArrayBlockingQueue<int[][]> frames;
     private final long startDelay;
     private final int max;
 
@@ -17,9 +14,6 @@ public final class BufferedDisplayTask extends DisplayTask {
         super(plugin, repeat, fps, interlace);
         this.startDelay = startDelay;
         this.max = max;
-
-        // Buffer a few seconds of video beforehand
-        this.frames = new ArrayBlockingQueue<>(Holovid.PRE_RENDER_SECONDS * fps);
     }
 
     @Override
@@ -38,7 +32,7 @@ public final class BufferedDisplayTask extends DisplayTask {
     @Override
     protected IChatBaseComponent[] getCurrentFrame() throws InterruptedException {
         // Block until the frame is processed
-        final int[][] frame = frames.take();
+        final int[][] frame = plugin.getVideoProcessor().getFrameQueue().take();
 
         // Convert to json component
         final IChatBaseComponent[] frameText = new IChatBaseComponent[interlace ? frame.length / 2 : frame.length];
@@ -52,10 +46,6 @@ public final class BufferedDisplayTask extends DisplayTask {
             }
         }
         return frameText;
-    }
-
-    public ArrayBlockingQueue<int[][]> getFrameQueue() {
-        return frames;
     }
 
     private IChatBaseComponent dataToComponent(final int[] row) {

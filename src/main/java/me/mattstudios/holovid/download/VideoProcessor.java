@@ -2,7 +2,6 @@ package me.mattstudios.holovid.download;
 
 import com.google.common.base.Preconditions;
 import me.mattstudios.holovid.Holovid;
-import me.mattstudios.holovid.display.BufferedDisplayTask;
 import me.mattstudios.holovid.display.TaskInfo;
 import me.mattstudios.holovid.utils.ImageUtils;
 import me.mattstudios.holovid.utils.Task;
@@ -29,6 +28,7 @@ public final class VideoProcessor {
     private final Lock threadLock = new ReentrantLock();
     private final Holovid plugin;
     private ArrayBlockingQueue<Picture> pictures;
+    private ArrayBlockingQueue<int[][]> frameQueue;
     private Thread grabbingThread;
     private Thread frameProcessingThread;
 
@@ -64,8 +64,10 @@ public final class VideoProcessor {
 
             threadLock.lock();
             frameProcessingThread = Thread.currentThread();
-            // Limit to a few seconds of video if buffered
-            pictures = new ArrayBlockingQueue<>(Holovid.PRE_RENDER_SECONDS * fps);
+            // Buffer a few seconds of video beforehand
+            final int capacity = Holovid.PRE_RENDER_SECONDS * fps;
+            this.pictures = new ArrayBlockingQueue<>(capacity);
+            this.frameQueue = new ArrayBlockingQueue<>(capacity);
             threadLock.unlock();
 
             Task.async(() -> {
@@ -95,13 +97,10 @@ public final class VideoProcessor {
                     if (Thread.interrupted()) return;
 
                     // Block if there already are a lot of pre-buffered frames
-                    final BufferedDisplayTask task = (BufferedDisplayTask) plugin.getTask();
                     try {
-                        if (task != null) {
-                            // Also wait for the frames queue as well - hack to fix random speedups when the frame queue is full
-                            while (task.getFrameQueue().remainingCapacity() <= 1) {
-                                Thread.sleep(5);
-                            }
+                        // Also wait for the frames queue as well - hack to fix random speedups when the frame queue is full
+                        while (frameQueue.remainingCapacity() <= 1) {
+                            Thread.sleep(5);
                         }
 
                         pictures.put(last);
@@ -123,7 +122,7 @@ public final class VideoProcessor {
 
             // Resize and save images in parallel to the frame grabbing
             for (int frameCount = 0; frameCount < frames; frameCount++) {
-                if (Thread.interrupted()) return;
+                if (Thread.interrupted() || pictures == null) return;
 
                 // Wait for frame to be loaded
                 final Picture picture = pictures.take();
@@ -156,6 +155,10 @@ public final class VideoProcessor {
             pictures.clear();
             pictures = null;
         }
+        if (frameQueue != null) {
+            frameQueue.clear();
+            frameQueue = null;
+        }
         threadLock.unlock();
     }
 
@@ -169,10 +172,13 @@ public final class VideoProcessor {
             System.arraycopy(rgbArray, i * width, row, 0, width);
         }
 
-        final BufferedDisplayTask task = (BufferedDisplayTask) plugin.getTask();
-        if (task == null) return;
+        if (Thread.interrupted()) return;
 
         // Block until the frame can be placed in the queue
-        task.getFrameQueue().put(frame);
+        frameQueue.put(frame);
+    }
+
+    public ArrayBlockingQueue<int[][]> getFrameQueue() {
+        return frameQueue;
     }
 }

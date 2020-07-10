@@ -14,7 +14,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public abstract class DisplayTask implements Runnable {
 
-    private final Holovid plugin;
+    protected final Holovid plugin;
     private final long frameDelayNanos;
     private final boolean repeat;
     protected final boolean interlace;
