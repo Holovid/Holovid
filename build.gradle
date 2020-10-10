@@ -23,7 +23,7 @@ allprojects {
     dependencies {
 
         // Paper
-        compileOnly "com.destroystokyo.paper:paper:1.16.1-R0.1-SNAPSHOT"
+        compileOnly "com.destroystokyo.paper:paper:1.16.3-R0.1-SNAPSHOT"
         // ProtocolLib
         compileOnly "com.comphenix.protocol:ProtocolLib:4.5.0"
 

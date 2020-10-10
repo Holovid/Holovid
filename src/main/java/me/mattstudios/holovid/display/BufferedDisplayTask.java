@@ -1,9 +1,9 @@
 package me.mattstudios.holovid.display;
 
 import me.mattstudios.holovid.Holovid;
-import net.minecraft.server.v1_16_R1.ChatBaseComponent;
-import net.minecraft.server.v1_16_R1.ChatComponentText;
-import net.minecraft.server.v1_16_R1.IChatBaseComponent;
+import net.minecraft.server.v1_16_R2.ChatBaseComponent;
+import net.minecraft.server.v1_16_R2.ChatComponentText;
+import net.minecraft.server.v1_16_R2.IChatBaseComponent;
 
 public final class BufferedDisplayTask extends DisplayTask {
 
