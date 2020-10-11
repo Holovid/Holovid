@@ -134,7 +134,7 @@ public abstract class DisplayTask implements Runnable {
         final ChatComponentText component;
         if (lastComponent != null && rgb == lastRgb) {
             // Add the character to the last component (with the same color)
-            component = new ChatComponentText(lastComponent.g() + "█");
+            component = new ChatComponentText(lastComponent.h() + "█");
             component.setChatModifier(lastComponent.getChatModifier());
 
             // Replace old component
