@@ -2,12 +2,14 @@ package me.mattstudios.holovid.hologram;
 
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketContainer;
+import com.comphenix.protocol.wrappers.WrappedChatComponent;
 import com.comphenix.protocol.wrappers.WrappedDataWatcher;
 import com.comphenix.protocol.wrappers.WrappedWatchableObject;
 import me.mattstudios.holovid.utils.NMSUtils;
 import net.minecraft.server.v1_16_R2.IChatBaseComponent;
 import org.bukkit.Location;
 
+import javax.swing.text.html.Option;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;

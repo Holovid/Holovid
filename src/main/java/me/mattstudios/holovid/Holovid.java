@@ -48,6 +48,7 @@ public final class Holovid extends JavaPlugin {
     private int displayHeight;
     private int displayWidth;
     private boolean shouldRequestAudio;
+    private URL audioRequestURL;
 
     @Override
     public void onEnable() {
@@ -55,6 +56,15 @@ public final class Holovid extends JavaPlugin {
         displayHeight = getConfig().getInt("display-height", 144);
         displayWidth = getConfig().getInt("display-width", 256);
         shouldRequestAudio = getConfig().getBoolean("request-audio");
+        try {
+            audioRequestURL = new URL(getConfig().getString("request-audio-url", "https://holov.id/"));
+        } catch (MalformedURLException e){
+            try {
+                audioRequestURL = new URL("https://holov.id/");
+            } catch (MalformedURLException ex){
+                ex.printStackTrace();
+            }
+        }
 
         // Loads the tasks util
         Task.init(this);
@@ -252,5 +262,9 @@ public final class Holovid extends JavaPlugin {
 
     public boolean shouldRequestAudio() {
         return shouldRequestAudio;
+    }
+
+    public URL getAudioRequestURL() {
+        return audioRequestURL;
     }
 }

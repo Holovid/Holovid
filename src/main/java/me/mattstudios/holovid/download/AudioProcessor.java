@@ -33,8 +33,9 @@ public final class AudioProcessor {
 
     public void process(final Player player, final URL videoUrl, final TaskInfo taskInfo) throws IOException {
         final String stringUrl = videoUrl.toExternalForm();
-        final HttpURLConnection c = (HttpURLConnection) new URL("https://holov.id/resourcepack/download/resource").openConnection();
-        c.setRequestProperty("videoUrl", stringUrl);
+        final URL url = new URL(plugin.getAudioRequestURL().toString() + "resourcepack/download?videoUrl=" + stringUrl);
+        final HttpURLConnection c = (HttpURLConnection) url.openConnection();
+        System.out.println(c.toString());
         final InputStream in = c.getInputStream();
         if (c.getResponseCode() != 200) {
             throw new RuntimeException("Error requestion audio data for " + videoUrl);
