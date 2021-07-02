@@ -5,8 +5,11 @@ import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.wrappers.WrappedChatComponent;
 import com.comphenix.protocol.wrappers.WrappedDataWatcher;
 import com.comphenix.protocol.wrappers.WrappedWatchableObject;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import me.mattstudios.holovid.utils.NMSUtils;
-import net.minecraft.server.v1_16_R2.IChatBaseComponent;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.bukkit.Location;
 
 import javax.swing.text.html.Option;
@@ -40,12 +43,14 @@ public final class HologramLine {
      *
      * @param component text component
      */
-    public void updateText(final IChatBaseComponent component) {
+    public void updateText(final Component component) {
         final PacketContainer packetContainer = new PacketContainer(PacketType.Play.Server.ENTITY_METADATA);
         packetContainer.getIntegers().write(0, entityId);
 
+        WrappedChatComponent wrappedChatComponent = WrappedChatComponent.fromJson(GsonComponentSerializer.gson().serialize(component));
+
         final List<WrappedWatchableObject> object = Collections.singletonList(
-                new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(2, chatSerializer), Optional.ofNullable(component)));
+                new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(2, chatSerializer), Optional.of(wrappedChatComponent.getHandle())));
         packetContainer.getWatchableCollectionModifier().write(0, object);
         parent.distributePacket(packetContainer);
     }
@@ -75,9 +80,10 @@ public final class HologramLine {
     }
 
     private List<WrappedWatchableObject> buildMetadata() {
-        final IChatBaseComponent component = IChatBaseComponent.ChatSerializer.jsonToComponent("{\"text\":\"-\"}");
+        WrappedChatComponent wrappedChatComponent = WrappedChatComponent.fromJson(GsonComponentSerializer.gson().serialize(Component.text("Waiting for video...")));
+
         return Arrays.asList(new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(0, WrappedDataWatcher.Registry.get(Byte.class)), (byte) 0x20),
-                new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(2, WrappedDataWatcher.Registry.getChatComponentSerializer(true)), Optional.ofNullable(component)),
+                new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(2, chatSerializer), Optional.of(wrappedChatComponent.getHandle())),
                 new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(3, WrappedDataWatcher.Registry.get(Boolean.class)), true),
                 new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(5, WrappedDataWatcher.Registry.get(Boolean.class)), true));
     }

@@ -1,9 +1,8 @@
 package me.mattstudios.holovid.display;
 
 import me.mattstudios.holovid.Holovid;
-import net.minecraft.server.v1_16_R2.ChatBaseComponent;
-import net.minecraft.server.v1_16_R2.ChatComponentText;
-import net.minecraft.server.v1_16_R2.IChatBaseComponent;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 
 public final class BufferedDisplayTask extends DisplayTask {
 
@@ -30,12 +29,12 @@ public final class BufferedDisplayTask extends DisplayTask {
     }
 
     @Override
-    protected IChatBaseComponent[] getCurrentFrame() throws InterruptedException {
+    protected Component[] getCurrentFrame() throws InterruptedException {
         // Block until the frame is processed
         final int[][] frame = plugin.getVideoProcessor().getFrameQueue().take();
 
         // Convert to json component
-        final IChatBaseComponent[] frameText = new IChatBaseComponent[interlace ? frame.length / 2 : frame.length];
+        final Component[] frameText = new Component[interlace ? frame.length / 2 : frame.length];
         if (interlace) {
             for (int y = oddFrame ? 1 : 0; y < frame.length; y += 2) {
                 frameText[y / 2] = dataToComponent(frame[y]);
@@ -48,15 +47,21 @@ public final class BufferedDisplayTask extends DisplayTask {
         return frameText;
     }
 
-    private IChatBaseComponent dataToComponent(final int[] row) {
-        final ChatBaseComponent component = new ChatComponentText("");
-        ChatComponentText lastComponent = null;
+    private Component dataToComponent(final int[] row) {
+        final TextComponent.Builder component = Component.text();
+        TextComponent.Builder lastComponent = null;
         int lastRgb = 0xFFFFFF;
+
         for (int rgb : row) {
             rgb &= 0x00FFFFFF;
-            lastComponent = appendComponent(component, rgb, lastRgb, lastComponent);
+            lastComponent = appendComponent(component, lastComponent, rgb, lastRgb);
             lastRgb = rgb;
         }
-        return component;
+
+        if (lastComponent != null){
+            component.append(lastComponent); // Append last component as there are no more pixels to process
+        }
+
+        return component.build();
     }
 }

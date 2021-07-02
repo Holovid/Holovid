@@ -2,11 +2,9 @@ package me.mattstudios.holovid.display;
 
 import me.mattstudios.holovid.Holovid;
 import me.mattstudios.holovid.hologram.HologramLine;
-import net.minecraft.server.v1_16_R2.ChatBaseComponent;
-import net.minecraft.server.v1_16_R2.ChatComponentText;
-import net.minecraft.server.v1_16_R2.ChatHexColor;
-import net.minecraft.server.v1_16_R2.ChatModifier;
-import net.minecraft.server.v1_16_R2.IChatBaseComponent;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.TextColor;
 
 import java.util.List;
 import java.util.concurrent.locks.Lock;
@@ -68,7 +66,7 @@ public abstract class DisplayTask implements Runnable {
 
     private void runCycle() throws InterruptedException {
         // Load the frame in
-        final IChatBaseComponent[] frame = getCurrentFrame();
+        final Component[] frame = getCurrentFrame();
         if (frame == null) return;
 
         // Frame delay
@@ -87,7 +85,7 @@ public abstract class DisplayTask implements Runnable {
         if (interlace) {
             final int x = oddFrame ? 1 : 0;
             for (int i = 0; i < frame.length; i++) {
-                final IChatBaseComponent line = frame[i];
+                final Component line = frame[i];
                 final HologramLine hologramLine = lines.get(x + (i * 2));
 
                 hologramLine.updateText(line);
@@ -96,7 +94,7 @@ public abstract class DisplayTask implements Runnable {
             oddFrame = !oddFrame;
         } else {
             for (int i = 0; i < frame.length; i++) {
-                final IChatBaseComponent line = frame[i];
+                final Component line = frame[i];
                 final HologramLine hologramLine = lines.get(i);
                 hologramLine.updateText(line);
             }
@@ -117,7 +115,7 @@ public abstract class DisplayTask implements Runnable {
      */
     public abstract int getMaxFrames();
 
-    protected abstract IChatBaseComponent[] getCurrentFrame() throws InterruptedException;
+    protected abstract Component[] getCurrentFrame() throws InterruptedException;
 
     public void stop() {
         // This should only actually block for any period of time when the task is initially starting
@@ -130,21 +128,16 @@ public abstract class DisplayTask implements Runnable {
         this.runningInfoLock.unlock();
     }
 
-    protected ChatComponentText appendComponent(final ChatBaseComponent parent, final int rgb, final int lastRgb, final ChatComponentText lastComponent) {
-        final ChatComponentText component;
-        if (lastComponent != null && rgb == lastRgb) {
-            // Add the character to the last component (with the same color)
-            component = new ChatComponentText(lastComponent.h() + "█");
-            component.setChatModifier(lastComponent.getChatModifier());
-
-            // Replace old component
-            parent.getSiblings().set(parent.getSiblings().size() - 1, component);
+    protected TextComponent.Builder appendComponent(final TextComponent.Builder parent, TextComponent.Builder lastComponent, final int rgb, final int lastRgb) {
+        if (lastComponent != null && rgb == lastRgb){
+            lastComponent.content(lastComponent.content() + "█"); // Keep same color of component but add another pixel
         } else {
-            // Add a new component
-            component = new ChatComponentText("█");
-            component.setChatModifier(ChatModifier.a.setColor(ChatHexColor.a(rgb)));
-            parent.addSibling(component);
+            if (lastComponent != null){
+                parent.append(lastComponent.build()); // Push last pixel to parent
+            }
+
+            lastComponent = Component.text().content("█").color(TextColor.color(rgb)); // create new pixel
         }
-        return component;
+        return lastComponent;
     }
 }
