@@ -43,8 +43,8 @@ allprojects {
 
     }
 
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
 
     compileJava {
         options.compilerArgs += ["-parameters"]
@@ -59,7 +59,7 @@ shadowJar {
     clean
 
     relocate("me.mattstudios.mf", "me.mattstudios.triumphpets.mf")
-    archiveFileName = "Holovid-${project.version}.jar"
+    archiveFileName = "Holovid.jar"
 }
 
 tasks.withType(JavaCompile) {
