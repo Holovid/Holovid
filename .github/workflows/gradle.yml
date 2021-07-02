@@ -28,5 +28,5 @@ jobs:
 
     - uses: actions/upload-artifact@v2
       with:
-        name: Holovid
-        path: /build/libs/Holovid.jar
+        name: Holovid Jar
+        path: build/libs/Holovid.jar
