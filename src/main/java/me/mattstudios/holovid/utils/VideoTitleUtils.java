@@ -1,7 +1,7 @@
 package me.mattstudios.holovid.utils;
 
-import com.github.kiulian.downloader.model.VideoDetails;
-import com.github.kiulian.downloader.model.formats.Format;
+import com.github.kiulian.downloader.model.videos.VideoDetails;
+import com.github.kiulian.downloader.model.videos.formats.Format;
 
 import java.io.File;
 
