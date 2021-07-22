@@ -34,7 +34,7 @@ allprojects {
 
         implementation "commons-validator:commons-validator:1.6"
 
-        implementation "com.github.sealedtx:java-youtube-downloader:2.2.0"
+        implementation "com.github.sealedtx:java-youtube-downloader:3.0.1"
 
         implementation "org.jcodec:jcodec:0.2.5"
         implementation "org.jcodec:jcodec-android:0.2.5"

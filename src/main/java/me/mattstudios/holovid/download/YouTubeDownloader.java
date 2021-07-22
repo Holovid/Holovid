@@ -1,11 +1,12 @@
 package me.mattstudios.holovid.download;
 
 import com.github.kiulian.downloader.YoutubeDownloader;
-import com.github.kiulian.downloader.YoutubeException;
-import com.github.kiulian.downloader.model.YoutubeVideo;
-import com.github.kiulian.downloader.model.formats.AudioVideoFormat;
-import com.github.kiulian.downloader.model.formats.VideoFormat;
-import com.github.kiulian.downloader.model.quality.VideoQuality;
+import com.github.kiulian.downloader.downloader.request.RequestVideoFileDownload;
+import com.github.kiulian.downloader.downloader.request.RequestVideoInfo;
+import com.github.kiulian.downloader.downloader.response.Response;
+import com.github.kiulian.downloader.model.videos.VideoInfo;
+import com.github.kiulian.downloader.model.videos.formats.VideoFormat;
+import com.github.kiulian.downloader.model.videos.formats.VideoWithAudioFormat;
 import me.mattstudios.holovid.Holovid;
 import org.bukkit.entity.Player;
 
@@ -21,16 +22,18 @@ public final class YouTubeDownloader extends VideoDownloader {
 
     public YouTubeDownloader(final Holovid plugin) {
         super(plugin);
-        downloader.setParserRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.121 Safari/537.36");
+        downloader.getConfig().setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.121 Safari/537.36");
     }
 
     public void download0(final Player player, final URL videoUrl, final boolean interlace) {
         // Gets the video ID
         final String id = videoUrl.getQuery().substring(2);
         try {
-            final YoutubeVideo video = downloader.getVideo(id);
+            final RequestVideoInfo reqest = new RequestVideoInfo(id);
+            final Response<VideoInfo> response = downloader.getVideoInfo(reqest);
+            final VideoInfo videoInfo = response.data();
 
-            final File outputDir = getOutputDirForTitle(video.details().title());
+            final File outputDir = getOutputDirForTitle(videoInfo.details().title());
             final File videoFile = new File(outputDir, "video.mp4");
             if (videoFile.exists()) {
                 // Play video from saved file
@@ -45,22 +48,25 @@ public final class YouTubeDownloader extends VideoDownloader {
             }
 
             // Gets the format to use on the download (this one has been the only one to work so far)
-            final List<AudioVideoFormat> videoWithAudioFormats = video.videoWithAudioFormats();
-            final AudioVideoFormat format = videoWithAudioFormats.get(0);
+            final List<VideoWithAudioFormat> videoWithAudioFormats = videoInfo.videoWithAudioFormats();
+            final VideoWithAudioFormat format = videoWithAudioFormats.get(0);
 
             // Downloads the video into the videos dir
-            final File download = video.download(format, outputDir);
+            final RequestVideoFileDownload download = new RequestVideoFileDownload(format)
+                    .saveTo(outputDir);
+
+            final Response<File> downloadedVideo = downloader.downloadVideoFile(download);
 
             // Rename for easier access
-            Files.move(download.toPath(), videoFile.toPath());
+            Files.move(downloadedVideo.data().toPath(), videoFile.toPath());
 
             // Calculates how many frames the video has
-            final List<VideoFormat> videoQuality = video.findVideoWithQuality(VideoQuality.tiny);
+            final List<VideoFormat> videoQuality = videoInfo.videoFormats();
             final int fps = videoQuality.get(0).fps();
-            final int frames = fps * video.details().lengthSeconds();
+            final int frames = fps * videoInfo.details().lengthSeconds();
             final boolean prepareAudio = frames / fps < Holovid.MAX_SECONDS_FOR_AUDIO;
             saveDataAndPlay(player, videoFile, videoUrl, outputDir, prepareAudio, frames, fps, interlace);
-        } catch (final YoutubeException | IOException e) {
+        } catch (final IOException e) {
             player.sendMessage("Error downloading the video!");
             e.printStackTrace();
         }
