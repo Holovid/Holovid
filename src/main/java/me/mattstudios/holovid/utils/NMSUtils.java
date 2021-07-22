@@ -17,7 +17,7 @@ public final class NMSUtils {
         NMS = "net.minecraft.server." + SERVER_VERSION + ".";
         /*
         try {
-            final Field entityCount = getNMSClass("Entity").getDeclaredField("entityCount");
+            final Field entityCount = Class.forName("net.minecraft.world.entity.Entity").getDeclaredField("b");
             entityCount.setAccessible(true);
             ENTITY_ID = (AtomicInteger) entityCount.get(null);
         } catch (final ReflectiveOperationException e) {
