@@ -15,6 +15,7 @@ public final class NMSUtils {
         final String packageName = Bukkit.getServer().getClass().getPackage().getName();
         SERVER_VERSION = packageName.substring(packageName.lastIndexOf('.') + 1);
         NMS = "net.minecraft.server." + SERVER_VERSION + ".";
+        /*
         try {
             final Field entityCount = getNMSClass("Entity").getDeclaredField("entityCount");
             entityCount.setAccessible(true);
@@ -22,6 +23,9 @@ public final class NMSUtils {
         } catch (final ReflectiveOperationException e) {
             throw new IllegalArgumentException(e);
         }
+
+         */
+        ENTITY_ID = new AtomicInteger(100000000);
     }
 
     public static Class<?> getNMSClass(final String className) throws ClassNotFoundException {
