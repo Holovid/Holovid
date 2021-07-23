@@ -1,10 +1,13 @@
 package me.mattstudios.holovid;
 
+import com.comphenix.protocol.ProtocolLibrary;
 import com.google.common.base.Preconditions;
 import me.mattstudios.holovid.command.DownloadCommand;
 import me.mattstudios.holovid.command.PlayCommand;
 import me.mattstudios.holovid.command.SpawnScreenCommand;
 import me.mattstudios.holovid.command.StopCommand;
+import me.mattstudios.holovid.compatability.CompatibilityManager;
+import me.mattstudios.holovid.compatability.CompatibilityWrapper;
 import me.mattstudios.holovid.display.BufferedDisplayTask;
 import me.mattstudios.holovid.display.DisplayTask;
 import me.mattstudios.holovid.download.AudioProcessor;
@@ -34,9 +37,10 @@ import java.util.Collections;
 import java.util.stream.Collectors;
 
 public final class Holovid extends JavaPlugin {
-
+    private static CompatibilityWrapper compatibilityWrapper;
     public static final int MAX_SECONDS_FOR_AUDIO = 60 * 60; // Don't even try changing this, the external server checks for it as well
     public static final int PRE_RENDER_SECONDS = 20;
+
     private CommandManager commandManager;
     private VideoProcessor videoProcessor;
     private AudioProcessor audioProcessor;
@@ -45,6 +49,9 @@ public final class Holovid extends JavaPlugin {
     private Hologram hologram;
     private DisplayTask task;
 
+
+
+    private String useVersionInstead;
     private int displayHeight;
     private int displayWidth;
     private boolean shouldRequestAudio;
@@ -53,6 +60,7 @@ public final class Holovid extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        useVersionInstead = getConfig().getString("use-this-version-instead");
         displayHeight = getConfig().getInt("display-height", 144);
         displayWidth = getConfig().getInt("display-width", 256);
         shouldRequestAudio = getConfig().getBoolean("request-audio");
@@ -65,6 +73,8 @@ public final class Holovid extends JavaPlugin {
                 ex.printStackTrace();
             }
         }
+
+        compatibilityWrapper = new CompatibilityManager(ProtocolLibrary.getProtocolManager(), this).getWrapper();
 
         // Loads the tasks util
         Task.init(this);
@@ -266,5 +276,13 @@ public final class Holovid extends JavaPlugin {
 
     public URL getAudioRequestURL() {
         return audioRequestURL;
+    }
+
+    public String getUseVersionInstead() {
+        return useVersionInstead;
+    }
+
+    public static CompatibilityWrapper getCompatibilityWrapper() {
+        return compatibilityWrapper;
     }
 }

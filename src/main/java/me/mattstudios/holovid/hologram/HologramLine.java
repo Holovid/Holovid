@@ -1,31 +1,14 @@
 package me.mattstudios.holovid.hologram;
 
-import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.wrappers.WrappedChatComponent;
-import com.comphenix.protocol.wrappers.WrappedDataWatcher;
-import com.comphenix.protocol.wrappers.WrappedWatchableObject;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import me.mattstudios.holovid.utils.NMSUtils;
+import me.mattstudios.holovid.Holovid;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.bukkit.Location;
-
-import javax.swing.text.html.Option;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Individual hologram line of its {@link Hologram} parent.
  */
 public final class HologramLine {
-
-    private static final WrappedDataWatcher.Serializer chatSerializer = WrappedDataWatcher.Registry.getChatComponentSerializer(true);
-
     private final Hologram parent;
     private final int entityId;
 
@@ -35,7 +18,7 @@ public final class HologramLine {
      */
     public HologramLine(final Hologram parent) {
         this.parent = parent;
-        this.entityId = NMSUtils.getNewEntityId();
+        this.entityId = Holovid.getCompatibilityWrapper().getUniqueEntityId();
     }
 
     /**
@@ -44,48 +27,19 @@ public final class HologramLine {
      * @param component text component
      */
     public void updateText(final Component component) {
-        final PacketContainer packetContainer = new PacketContainer(PacketType.Play.Server.ENTITY_METADATA);
-        packetContainer.getIntegers().write(0, entityId);
-
-        WrappedChatComponent wrappedChatComponent = WrappedChatComponent.fromJson(GsonComponentSerializer.gson().serialize(component));
-
-        final List<WrappedWatchableObject> object = Collections.singletonList(
-                new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(2, chatSerializer), Optional.of(wrappedChatComponent.getHandle())));
-        packetContainer.getWatchableCollectionModifier().write(0, object);
-        parent.distributePacket(packetContainer);
+        parent.distributePacket(Holovid.getCompatibilityWrapper().getUpdatePacket(entityId, component));
     }
 
     public PacketContainer createSpawnPackets(final Location location) {
-        final PacketContainer spawnEntityLiving = new PacketContainer(PacketType.Play.Server.SPAWN_ENTITY_LIVING);
-        spawnEntityLiving.getIntegers().write(0, entityId);
-        spawnEntityLiving.getUUIDs().write(0, UUID.randomUUID());
-        spawnEntityLiving.getIntegers().write(1, 1);
-        spawnEntityLiving.getDoubles().write(0, location.getX());
-        spawnEntityLiving.getDoubles().write(1, location.getY());
-        spawnEntityLiving.getDoubles().write(2, location.getZ());
-        return spawnEntityLiving;
+        return Holovid.getCompatibilityWrapper().createSpawnPacket(entityId, location);
     }
 
     public PacketContainer createDespawnPacket() {
-        final PacketContainer packetContainer = new PacketContainer(PacketType.Play.Server.ENTITY_DESTROY);
-        packetContainer.getIntegerArrays().write(0, new int[]{entityId});
-        return packetContainer;
+        return Holovid.getCompatibilityWrapper().createRemovePacket(entityId);
     }
 
     public PacketContainer createMetadataPacket() {
-        final PacketContainer packetContainer = new PacketContainer(PacketType.Play.Server.ENTITY_METADATA);
-        packetContainer.getIntegers().write(0, entityId);
-        packetContainer.getWatchableCollectionModifier().write(0, buildMetadata());
-        return packetContainer;
-    }
-
-    private List<WrappedWatchableObject> buildMetadata() {
-        WrappedChatComponent wrappedChatComponent = WrappedChatComponent.fromJson(GsonComponentSerializer.gson().serialize(Component.text("Waiting for video...")));
-
-        return Arrays.asList(new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(0, WrappedDataWatcher.Registry.get(Byte.class)), (byte) 0x20),
-                new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(2, chatSerializer), Optional.of(wrappedChatComponent.getHandle())),
-                new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(3, WrappedDataWatcher.Registry.get(Boolean.class)), true),
-                new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(5, WrappedDataWatcher.Registry.get(Boolean.class)), true));
+        return Holovid.getCompatibilityWrapper().createMetadataPacket(entityId);
     }
 
     public Hologram getParent() {
@@ -95,5 +49,4 @@ public final class HologramLine {
     public int getEntityId() {
         return entityId;
     }
-
 }

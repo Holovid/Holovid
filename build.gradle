@@ -24,7 +24,7 @@ allprojects {
         // Paper
         compileOnly 'com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT'
         // ProtocolLib
-        compileOnly "com.comphenix.protocol:ProtocolLib:4.5.0"
+        compileOnly "com.comphenix.protocol:ProtocolLib:4.7.0"
 
         // JetBrains annotations
         compileOnly "org.jetbrains:annotations:19.0.0"
