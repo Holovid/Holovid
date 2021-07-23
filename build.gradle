@@ -1,5 +1,5 @@
 plugins {
-    id 'com.github.johnrengelman.shadow' version '5.1.0'
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
 }
 
 
@@ -12,17 +12,16 @@ allprojects {
     repositories {
         mavenCentral()
         mavenLocal()
-        jcenter()
 
         maven { url = 'https://papermc.io/repo/repository/maven-public/' }
         maven { url = 'https://jitpack.io' }
-        maven { url = 'http://repo.dmulloy2.net/nexus/repository/public/' }
+        maven { url = 'https://repo.dmulloy2.net/nexus/repository/public/' }
     }
 
     dependencies {
 
         // Paper
-        compileOnly 'com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT'
+        compileOnly 'io.papermc.paper:paper-api:1.17.1-R0.1-SNAPSHOT'
         // ProtocolLib
         compileOnly "com.comphenix.protocol:ProtocolLib:4.7.0"
 
@@ -43,8 +42,8 @@ allprojects {
 
     }
 
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_16
+    targetCompatibility = JavaVersion.VERSION_16
 
     compileJava {
         options.compilerArgs += ["-parameters"]
@@ -69,7 +68,5 @@ tasks.withType(JavaCompile) {
 import org.apache.tools.ant.filters.ReplaceTokens
 
 processResources {
-    from(sourceSets.main.resources.srcDirs) {
-        filter ReplaceTokens, tokens: [version: version]
-    }
+    filter ReplaceTokens, tokens: [version: version]
 }
