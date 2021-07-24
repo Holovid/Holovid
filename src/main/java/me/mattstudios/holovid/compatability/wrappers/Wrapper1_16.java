@@ -19,7 +19,7 @@ public class Wrapper1_16 implements CompatibilityWrapper {
     private static final WrappedDataWatcher.Serializer chatSerializer = WrappedDataWatcher.Registry.getChatComponentSerializer(true);
 
     public PacketContainer createSpawnPacket(int entityId, Location location) {
-        PacketContainer packet = new PacketContainer(PacketType.Play.Server.SPAWN_ENTITY_LIVING);
+        final PacketContainer packet = new PacketContainer(PacketType.Play.Server.SPAWN_ENTITY_LIVING);
 
         packet.getIntegers()
                 .write(0, entityId)
@@ -41,13 +41,14 @@ public class Wrapper1_16 implements CompatibilityWrapper {
                 .write(0, entityId);
 
         final WrappedChatComponent wrappedChatComponent = WrappedChatComponent.fromJson(GsonComponentSerializer.gson().serialize(Component.text("Waiting for video...")));
-        final List<WrappedWatchableObject> watchers = Arrays.asList(new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(0, WrappedDataWatcher.Registry.get(Byte.class)), (byte) 0x20),
-                new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(2, chatSerializer), Optional.of(wrappedChatComponent.getHandle())),
-                new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(3, WrappedDataWatcher.Registry.get(Boolean.class)), true),
-                new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(5, WrappedDataWatcher.Registry.get(Boolean.class)), true));
+        final List<WrappedWatchableObject> content = new ArrayList<>();
+        content.add(new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(0, WrappedDataWatcher.Registry.get(Byte.class)), (byte) 0x20));
+        content.add(new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(2, chatSerializer), Optional.of(wrappedChatComponent.getHandle())));
+        content.add(new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(3, WrappedDataWatcher.Registry.get(Boolean.class)), true));
+        content.add(new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(5, WrappedDataWatcher.Registry.get(Boolean.class)), true));
 
         metaDataPacket.getWatchableCollectionModifier()
-                .write(0, watchers);
+                .write(0, content);
 
         return metaDataPacket;
     }
@@ -58,9 +59,9 @@ public class Wrapper1_16 implements CompatibilityWrapper {
         packetContainer.getIntegers()
                 .write(0, entityId);
 
-        WrappedChatComponent wrappedChatComponent = WrappedChatComponent.fromJson(GsonComponentSerializer.gson().serialize(component));
-        final List<WrappedWatchableObject> object = Collections.singletonList(
-                new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(2, chatSerializer), Optional.of(wrappedChatComponent.getHandle())));
+        final WrappedChatComponent wrappedChatComponent = WrappedChatComponent.fromJson(GsonComponentSerializer.gson().serialize(component));
+        final List<WrappedWatchableObject> object = new ArrayList<>();
+        object.add(new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(2, chatSerializer), Optional.of(wrappedChatComponent.getHandle())));
 
         packetContainer.getWatchableCollectionModifier()
                 .write(0, object);
