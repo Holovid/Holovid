@@ -129,14 +129,16 @@ public abstract class DisplayTask implements Runnable {
     }
 
     protected TextComponent.Builder appendComponent(final TextComponent.Builder parent, TextComponent.Builder lastComponent, final int rgb, final int lastRgb) {
+        final String pixel = "\uF811█";
+
         if (lastComponent != null && rgb == lastRgb){
-            lastComponent.content(lastComponent.content() + "█"); // Keep same color of component but add another pixel
+            lastComponent.content(lastComponent.content() + pixel); // Keep same color of component but add another pixel
         } else {
             if (lastComponent != null){
                 parent.append(lastComponent.build()); // Push last pixel to parent
             }
 
-            lastComponent = Component.text().content("█").color(TextColor.color(rgb)); // create new pixel
+            lastComponent = Component.text().content(pixel).color(TextColor.color(rgb)); // create new pixel
         }
         return lastComponent;
     }

@@ -6,6 +6,7 @@ import com.comphenix.protocol.wrappers.WrappedChatComponent;
 import com.comphenix.protocol.wrappers.WrappedDataWatcher;
 import com.comphenix.protocol.wrappers.WrappedWatchableObject;
 import me.mattstudios.holovid.compatability.CompatibilityWrapper;
+import me.mattstudios.holovid.compatability.utils.HolovidWrappedChatComponent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.bukkit.Bukkit;
@@ -59,9 +60,10 @@ public class Wrapper1_16 implements CompatibilityWrapper {
         packetContainer.getIntegers()
                 .write(0, entityId);
 
-        final WrappedChatComponent wrappedChatComponent = WrappedChatComponent.fromJson(GsonComponentSerializer.gson().serialize(component));
+        final HolovidWrappedChatComponent wrappedChatComponent = HolovidWrappedChatComponent.fromComponent(component);
         final List<WrappedWatchableObject> object = new ArrayList<>();
-        object.add(new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(2, chatSerializer), Optional.of(wrappedChatComponent.getHandle())));
+        object.add(new WrappedWatchableObject(new WrappedDataWatcher.WrappedDataWatcherObject(2, chatSerializer),
+                Optional.of(wrappedChatComponent.getHandle())));
 
         packetContainer.getWatchableCollectionModifier()
                 .write(0, object);
