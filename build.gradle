@@ -18,30 +18,6 @@ allprojects {
         maven { url = 'https://repo.dmulloy2.net/nexus/repository/public/' }
     }
 
-    dependencies {
-
-        // Paper
-        compileOnly 'io.papermc.paper:paper-api:1.17.1-R0.1-SNAPSHOT'
-        // ProtocolLib
-        compileOnly "com.comphenix.protocol:ProtocolLib:4.7.0"
-
-        // JetBrains annotations
-        compileOnly "org.jetbrains:annotations:19.0.0"
-
-        // My stuff
-        implementation "me.mattstudios.utils:matt-framework:1.4.4"
-
-        implementation "commons-validator:commons-validator:1.6"
-
-        implementation "com.github.sealedtx:java-youtube-downloader:3.0.1"
-
-        implementation "org.jcodec:jcodec:0.2.5"
-        implementation "org.jcodec:jcodec-android:0.2.5"
-        implementation "org.jcodec:jcodec-javase:0.2.5"
-        implementation "net.coobird:thumbnailator:0.4.11"
-
-    }
-
     sourceCompatibility = JavaVersion.VERSION_16
     targetCompatibility = JavaVersion.VERSION_16
 
@@ -51,6 +27,34 @@ allprojects {
         options.forkOptions.executable = 'javac'
         options.encoding = 'UTF-8'
     }
+
+}
+
+dependencies {
+
+    // Paper
+    compileOnly 'io.papermc.paper:paper-api:1.17.1-R0.1-SNAPSHOT'
+    // ProtocolLib
+    compileOnly "com.comphenix.protocol:ProtocolLib:4.7.0"
+
+    // JetBrains annotations
+    compileOnly "org.jetbrains:annotations:19.0.0"
+
+    // My stuff
+    implementation "me.mattstudios.utils:matt-framework:1.4.4"
+
+    implementation "commons-validator:commons-validator:1.6"
+
+    implementation "com.github.sealedtx:java-youtube-downloader:3.0.1"
+
+    implementation "org.jcodec:jcodec:0.2.5"
+    implementation "org.jcodec:jcodec-android:0.2.5"
+    implementation "org.jcodec:jcodec-javase:0.2.5"
+    implementation "net.coobird:thumbnailator:0.4.11"
+
+    implementation project("nms-common")
+    implementation project("nms-1-16-R3")
+    implementation project("nms-1-17-R1")
 
 }
 
