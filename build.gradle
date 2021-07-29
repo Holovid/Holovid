@@ -33,7 +33,7 @@ allprojects {
 dependencies {
 
     // Paper
-    compileOnly 'io.papermc.paper:paper-api:1.17.1-R0.1-SNAPSHOT'
+    compileOnly 'io.papermc.paper:paper:1.17.1-R0.1-SNAPSHOT'
     // ProtocolLib
     compileOnly "com.comphenix.protocol:ProtocolLib:4.7.0"
 
