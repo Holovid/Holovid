@@ -6,10 +6,9 @@ Holovid is an upcoming plugin that allows you to play videos in game.
 ## Donate
 If you'd like to support the development of Holovid, you can make a donation [here](https://www.paypal.me/GlareMasters)!
 
-[![BartyRealms](https://i.imgur.com/OCZBTxm.png)](https://bartyrealms.com/)
+## Special Thanks
+![YourKit](https://www.yourkit.com/images/yklogo.png)
 
-Thank you to [BartyRealms.com](https://bartyrealms.com) for providing us with a demo server for project development!
-
-Minecraft Chat Video
-
-Convert videos from YouTube to in-game watchable videos!
+YourKit supports open source projects with innovative and intelligent tools  
+for monitoring and profiling Java and .NET applications.  
+YourKit is the creator of [YourKit Java Profiler](https://www.yourkit.com/java/profiler/), [YourKit .NET Profiler](https://www.yourkit.com/.net/profiler/), and [YourKit YouMonitor](https://www.yourkit.com/youmonitor/).
