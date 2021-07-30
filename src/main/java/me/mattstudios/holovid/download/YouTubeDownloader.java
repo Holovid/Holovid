@@ -1,17 +1,32 @@
 package me.mattstudios.holovid.download;
 
 import com.github.kiulian.downloader.YoutubeDownloader;
+import com.github.kiulian.downloader.downloader.request.RequestSubtitlesDownload;
 import com.github.kiulian.downloader.downloader.request.RequestVideoFileDownload;
 import com.github.kiulian.downloader.downloader.request.RequestVideoInfo;
 import com.github.kiulian.downloader.downloader.response.Response;
+import com.github.kiulian.downloader.model.Extension;
+import com.github.kiulian.downloader.model.subtitles.SubtitlesInfo;
 import com.github.kiulian.downloader.model.videos.VideoInfo;
 import com.github.kiulian.downloader.model.videos.formats.VideoFormat;
 import com.github.kiulian.downloader.model.videos.formats.VideoWithAudioFormat;
 import me.mattstudios.holovid.Holovid;
+import me.mattstudios.holovid.misc.Translation;
+import me.mattstudios.holovid.misc.TranslationList;
 import org.bukkit.entity.Player;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.List;
@@ -60,13 +75,45 @@ public final class YouTubeDownloader extends VideoDownloader {
             // Rename for easier access
             Files.move(downloadedVideo.data().toPath(), videoFile.toPath());
 
+
+            // Subtitles Testing
+            final TranslationList list = new TranslationList();
+
+            final List<SubtitlesInfo> subtitlesInfos = videoInfo.subtitlesInfo();
+            for (final SubtitlesInfo info : subtitlesInfos) {
+                if (info.getLanguage().equals("en")) {
+                    final RequestSubtitlesDownload subtitlesDownload = new RequestSubtitlesDownload(info)
+                            .formatTo(Extension.TRANSCRIPT_V1);
+
+                    final Response<String> dl = downloader.downloadSubtitle(subtitlesDownload);
+                    final String output = dl.data();
+
+                    final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                    final DocumentBuilder builder = factory.newDocumentBuilder();
+                    final Document document = builder.parse(new InputSource(new StringReader(output)));
+
+                    document.getDocumentElement().normalize();
+
+                    final NodeList nodeList = document.getElementsByTagName("text");
+
+                    for (int i = 0; i < nodeList.getLength(); i++) {
+                        final Node node = nodeList.item(i);
+                        if (node.getNodeType() == Node.ELEMENT_NODE) {
+                            final Element element = (Element) node;
+                            list.add(new Translation(element.getAttribute("start"), element.getAttribute("dur"), element.getTextContent()));
+                        }
+                    }
+                }
+            }
+
+
             // Calculates how many frames the video has
             final List<VideoFormat> videoQuality = videoInfo.videoFormats();
             final int fps = videoQuality.get(0).fps();
             final int frames = fps * videoInfo.details().lengthSeconds();
             final boolean prepareAudio = frames / fps < Holovid.MAX_SECONDS_FOR_AUDIO;
-            saveDataAndPlay(player, videoFile, videoUrl, outputDir, prepareAudio, frames, fps, interlace);
-        } catch (final IOException e) {
+            saveDataAndPlay(player, videoFile, videoUrl, outputDir, prepareAudio, frames, fps, interlace, list);
+        } catch (final IOException | ParserConfigurationException | SAXException e) {
             player.sendMessage("Error downloading the video!");
             e.printStackTrace();
         }
