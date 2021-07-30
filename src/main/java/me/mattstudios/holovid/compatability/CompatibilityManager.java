@@ -1,6 +1,7 @@
 package me.mattstudios.holovid.compatability;
 
 import me.mattstudios.holovid.Holovid;
+import me.mattstudios.holovid.nms.NMS_1_16_R3;
 import me.mattstudios.holovid.nms.NMS_1_17_R1;
 import me.mattstudios.holovid.nms.NmsCommon;
 import org.bukkit.Bukkit;
@@ -18,12 +19,13 @@ public class CompatibilityManager {
     private final NmsCommon wrapper;
 
     private final List<Class<? extends NmsCommon>> versions = Arrays.asList(
+            NMS_1_16_R3.class,
             NMS_1_17_R1.class
     );
 
-    public CompatibilityManager(Holovid holovid){
+    public CompatibilityManager(Holovid holovid) {
         final String forcedVersion = holovid.getUseVersionInstead();
-        if (forcedVersion != null && !forcedVersion.equals("")){
+        if (forcedVersion != null && !forcedVersion.equals("")) {
             wrapper = match(forcedVersion);
         } else {
             String serverVersion = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3].substring(1);
