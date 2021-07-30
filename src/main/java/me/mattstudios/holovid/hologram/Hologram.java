@@ -3,6 +3,7 @@ package me.mattstudios.holovid.hologram;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.events.PacketContainer;
 import com.google.common.base.Preconditions;
+import me.mattstudios.holovid.Holovid;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -52,8 +53,8 @@ public final class Hologram {
 
         // Send spawn packets
         for (final HologramLine line : lines) {
-            final PacketContainer spawnPacket = line.createSpawnPackets(location);
-            final PacketContainer metadataPacket = line.createMetadataPacket();
+            final Object spawnPacket = line.createSpawnPackets(location);
+            final Object metadataPacket = line.createMetadataPacket();
             for (final Player player : viewers) {
                 distributePacket(player, spawnPacket);
                 distributePacket(player, metadataPacket);
@@ -68,7 +69,7 @@ public final class Hologram {
     public void despawn() {
         Preconditions.checkArgument(spawned);
         for (final HologramLine line : lines) {
-            final PacketContainer despawnPacket = line.createDespawnPacket();
+            final Object despawnPacket = line.createDespawnPacket();
             for (final Player player : viewers) {
                 distributePacket(player, despawnPacket);
             }
@@ -88,8 +89,8 @@ public final class Hologram {
 
         final Location location = baseLocation.clone();
         for (final HologramLine line : lines) {
-            final PacketContainer spawnPacket = line.createSpawnPackets(location);
-            final PacketContainer metadataPacket = line.createMetadataPacket();
+            final Object spawnPacket = line.createSpawnPackets(location);
+            final Object metadataPacket = line.createMetadataPacket();
             distributePacket(player, spawnPacket);
             distributePacket(player, metadataPacket);
             location.add(0, 0.225D, 0);
@@ -105,7 +106,7 @@ public final class Hologram {
         Preconditions.checkArgument(spawned);
         if (!viewers.remove(player)) return;
         for (final HologramLine line : lines) {
-            final PacketContainer despawnPacket = line.createDespawnPacket();
+            final Object despawnPacket = line.createDespawnPacket();
             distributePacket(player, despawnPacket);
         }
     }
@@ -137,8 +138,8 @@ public final class Hologram {
     public HologramLine addLine() {
         final HologramLine line = new HologramLine(this);
         if (spawned) {
-            final PacketContainer spawnPacket = line.createSpawnPackets(baseLocation.clone().add(0, 0.225D * lines.size(), 0));
-            final PacketContainer metadataPacket = line.createMetadataPacket();
+            final Object spawnPacket = line.createSpawnPackets(baseLocation.clone().add(0, 0.225D * lines.size(), 0));
+            final Object metadataPacket = line.createMetadataPacket();
             for (final Player player : viewers) {
                 distributePacket(player, spawnPacket);
                 distributePacket(player, metadataPacket);
@@ -157,7 +158,7 @@ public final class Hologram {
     public void removeLine(final int index) {
         final HologramLine line = lines.remove(index);
         if (spawned) {
-            final PacketContainer despawnPacket = line.createDespawnPacket();
+            final Object despawnPacket = line.createDespawnPacket();
             distributePacket(despawnPacket);
         }
     }
@@ -184,19 +185,42 @@ public final class Hologram {
         return baseLocation.clone();
     }
 
-    void distributePacket(final PacketContainer packetContainer) {
+    public void distributeFlush(){
         for (final Player player : viewers) {
-            distributePacket(player, packetContainer);
+            if (!player.isOnline()){
+                return;
+            }
+
+            Holovid.getCompatibilityWrapper().flush(player);
         }
     }
 
-    void distributePacket(final Player player, final PacketContainer packetContainer) {
-        if (!player.isOnline()) return;
-        try {
-            ProtocolLibrary.getProtocolManager().sendServerPacket(player, packetContainer);
-        } catch (final InvocationTargetException e) {
-            e.printStackTrace();
+    void distributePacketNoFlush(final Object packet){
+        for (final Player player : viewers) {
+            distributePacketNoFlush(player, packet);
         }
     }
 
+    void distributePacketNoFlush(final Player player, final Object packet) {
+        if (!player.isOnline()) {
+            return;
+        }
+
+        Holovid.getCompatibilityWrapper().sendPacket(player, packet);
+    }
+
+    void distributePacket(final Object packet) {
+        for (final Player player : viewers) {
+            distributePacket(player, packet);
+        }
+    }
+
+    void distributePacket(final Player player, final Object packet) {
+        if (!player.isOnline()) {
+            return;
+        }
+
+        Holovid.getCompatibilityWrapper().sendPacket(player, packet);
+        Holovid.getCompatibilityWrapper().flush(player);
+    }
 }

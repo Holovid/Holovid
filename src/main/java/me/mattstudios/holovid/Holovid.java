@@ -1,13 +1,11 @@
 package me.mattstudios.holovid;
 
-import com.comphenix.protocol.ProtocolLibrary;
 import com.google.common.base.Preconditions;
 import me.mattstudios.holovid.command.DownloadCommand;
 import me.mattstudios.holovid.command.PlayCommand;
 import me.mattstudios.holovid.command.SpawnScreenCommand;
 import me.mattstudios.holovid.command.StopCommand;
 import me.mattstudios.holovid.compatability.CompatibilityManager;
-import me.mattstudios.holovid.compatability.CompatibilityWrapper;
 import me.mattstudios.holovid.display.BufferedDisplayTask;
 import me.mattstudios.holovid.display.DisplayTask;
 import me.mattstudios.holovid.download.AudioProcessor;
@@ -17,6 +15,7 @@ import me.mattstudios.holovid.download.YouTubeDownloader;
 import me.mattstudios.holovid.hologram.Hologram;
 import me.mattstudios.holovid.listener.HologramListener;
 import me.mattstudios.holovid.listener.ResourcePackStatusListener;
+import me.mattstudios.holovid.nms.NmsCommon;
 import me.mattstudios.holovid.utils.Task;
 import me.mattstudios.mf.base.CommandManager;
 import me.mattstudios.mf.base.components.TypeResult;
@@ -37,7 +36,7 @@ import java.util.Collections;
 import java.util.stream.Collectors;
 
 public final class Holovid extends JavaPlugin {
-    private static CompatibilityWrapper compatibilityWrapper;
+    private static NmsCommon compatibilityWrapper;
     public static final int MAX_SECONDS_FOR_AUDIO = 60 * 60; // Don't even try changing this, the external server checks for it as well
     public static final int PRE_RENDER_SECONDS = 20;
 
@@ -74,7 +73,7 @@ public final class Holovid extends JavaPlugin {
             }
         }
 
-        compatibilityWrapper = new CompatibilityManager(ProtocolLibrary.getProtocolManager(), this).getWrapper();
+        compatibilityWrapper = new CompatibilityManager(this).getWrapper();
 
         // Loads the tasks util
         Task.init(this);
@@ -282,7 +281,7 @@ public final class Holovid extends JavaPlugin {
         return useVersionInstead;
     }
 
-    public static CompatibilityWrapper getCompatibilityWrapper() {
+    public static NmsCommon getCompatibilityWrapper() {
         return compatibilityWrapper;
     }
 }

@@ -100,6 +100,8 @@ public abstract class DisplayTask implements Runnable {
             }
         }
 
+        plugin.getHologram().distributeFlush(); // Flush packets for new frame
+
         if (++frameCounter == getMaxFrames()) {
             if (!repeat) {
                 plugin.stopDisplayTask();
@@ -130,13 +132,13 @@ public abstract class DisplayTask implements Runnable {
 
     protected TextComponent.Builder appendComponent(final TextComponent.Builder parent, TextComponent.Builder lastComponent, final int rgb, final int lastRgb) {
         if (lastComponent != null && rgb == lastRgb){
-            lastComponent.content(lastComponent.content() + "█"); // Keep same color of component but add another pixel
+            lastComponent.content(lastComponent.content() + "\uF811█"); // Keep same color of component but add another pixel
         } else {
             if (lastComponent != null){
                 parent.append(lastComponent.build()); // Push last pixel to parent
             }
 
-            lastComponent = Component.text().content("█").color(TextColor.color(rgb)); // create new pixel
+            lastComponent = Component.text().content("\uF811█").color(TextColor.color(rgb)); // create new pixel
         }
         return lastComponent;
     }

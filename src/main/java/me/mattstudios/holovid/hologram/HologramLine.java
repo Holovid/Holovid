@@ -18,7 +18,7 @@ public final class HologramLine {
      */
     public HologramLine(final Hologram parent) {
         this.parent = parent;
-        this.entityId = Holovid.getCompatibilityWrapper().getUniqueEntityId();
+        this.entityId = Holovid.getCompatibilityWrapper().getUniqueEntityID();
     }
 
     /**
@@ -27,18 +27,18 @@ public final class HologramLine {
      * @param component text component
      */
     public void updateText(final Component component) {
-        parent.distributePacket(Holovid.getCompatibilityWrapper().getUpdatePacket(entityId, component));
+        parent.distributePacketNoFlush(Holovid.getCompatibilityWrapper().getUpdatePacket(entityId, component));
     }
 
-    public PacketContainer createSpawnPackets(final Location location) {
+    public Object createSpawnPackets(final Location location) {
         return Holovid.getCompatibilityWrapper().createSpawnPacket(entityId, location);
     }
 
-    public PacketContainer createDespawnPacket() {
+    public Object createDespawnPacket() {
         return Holovid.getCompatibilityWrapper().createRemovePacket(entityId);
     }
 
-    public PacketContainer createMetadataPacket() {
+    public Object createMetadataPacket() {
         return Holovid.getCompatibilityWrapper().createMetadataPacket(entityId);
     }
 
