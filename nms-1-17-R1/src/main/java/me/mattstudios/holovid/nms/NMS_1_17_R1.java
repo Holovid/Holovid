@@ -1,18 +1,12 @@
 package me.mattstudios.holovid.nms;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.channel.Channel;
 import io.papermc.paper.adventure.PaperAdventure;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.minecraft.network.NetworkManager;
-import net.minecraft.network.PacketDataSerializer;
 import net.minecraft.network.protocol.game.PacketPlayOutEntityDestroy;
 import net.minecraft.network.protocol.game.PacketPlayOutEntityMetadata;
 import net.minecraft.network.protocol.game.PacketPlayOutSpawnEntity;
-import net.minecraft.network.syncher.DataWatcher;
-import net.minecraft.network.syncher.DataWatcherObject;
 import net.minecraft.server.network.PlayerConnection;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityTypes;
@@ -26,12 +20,11 @@ import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
-import java.util.Vector;
 
 public class NMS_1_17_R1 implements NmsCommon {
     private final Entity entity;
 
-    public NMS_1_17_R1(){
+    public NMS_1_17_R1() {
         World world = ((CraftWorld) Bukkit.getWorlds().get(0)).getHandle();
 
         entity = new EntityArmorStand(EntityTypes.c, world);
@@ -98,7 +91,7 @@ public class NMS_1_17_R1 implements NmsCommon {
     }
 
     @Override
-    public int getUniqueEntityID(){
+    public int getUniqueEntityID() {
         return Entity.nextEntityId();
     }
 }

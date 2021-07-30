@@ -53,7 +53,7 @@ dependencies {
     implementation "net.coobird:thumbnailator:0.4.11"
 
     implementation project("nms-common")
-    //implementation project("nms-1-16-R3")
+    implementation project("nms-1-16-R3")
     implementation project("nms-1-17-R1")
 
 }
