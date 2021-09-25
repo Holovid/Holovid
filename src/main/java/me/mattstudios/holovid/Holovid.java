@@ -65,10 +65,10 @@ public final class Holovid extends JavaPlugin {
         displayWidth = getConfig().getInt("display-width", 256);
         shouldRequestAudio = getConfig().getBoolean("request-audio");
         try {
-            audioRequestURL = new URL(getConfig().getString("request-audio-url", "https://holovid.glare.dev/"));
+            audioRequestURL = new URL(getConfig().getString("request-audio-url", "https://api.holov.id/"));
         } catch (MalformedURLException e){
             try {
-                audioRequestURL = new URL("https://holovid.glare.dev/");
+                audioRequestURL = new URL("https://api.holov.id/");
             } catch (MalformedURLException ex){
                 ex.printStackTrace();
             }
