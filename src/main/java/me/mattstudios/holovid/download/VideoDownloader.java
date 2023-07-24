@@ -58,6 +58,8 @@ public abstract class VideoDownloader {
 
         plugin.resetCurrentDownloader();
 
+
+
         // Play the video!
         plugin.getVideoProcessor().play(player, videoFile, videoUrl, prepareAudio, plugin.getDisplayHeight(), plugin.getDisplayWidth(), frames, fps, interlace);
     }

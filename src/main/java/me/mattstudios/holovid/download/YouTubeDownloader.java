@@ -49,13 +49,15 @@ public final class YouTubeDownloader extends VideoDownloader {
 
             // Gets the format to use on the download (this one has been the only one to work so far)
             final List<VideoWithAudioFormat> videoWithAudioFormats = videoInfo.videoWithAudioFormats();
-            final VideoWithAudioFormat format = videoWithAudioFormats.get(0);
+            //This is set to 1 because youtube's lowest quality uses some weird codec which Jcodec does not understand
+            final VideoWithAudioFormat format = videoWithAudioFormats.get(1);
 
             // Downloads the video into the videos dir
             final RequestVideoFileDownload download = new RequestVideoFileDownload(format)
                     .saveTo(outputDir);
 
             final Response<File> downloadedVideo = downloader.downloadVideoFile(download);
+
 
             // Rename for easier access
             Files.move(downloadedVideo.data().toPath(), videoFile.toPath());

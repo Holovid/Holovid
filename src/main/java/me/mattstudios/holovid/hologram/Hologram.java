@@ -192,11 +192,7 @@ public final class Hologram {
 
     void distributePacket(final Player player, final PacketContainer packetContainer) {
         if (!player.isOnline()) return;
-        try {
-            ProtocolLibrary.getProtocolManager().sendServerPacket(player, packetContainer);
-        } catch (final InvocationTargetException e) {
-            e.printStackTrace();
-        }
+        ProtocolLibrary.getProtocolManager().sendServerPacket(player, packetContainer);
     }
 
 }
