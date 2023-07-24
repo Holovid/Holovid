@@ -8,6 +8,7 @@ import com.github.kiulian.downloader.model.videos.VideoInfo;
 import com.github.kiulian.downloader.model.videos.formats.VideoFormat;
 import com.github.kiulian.downloader.model.videos.formats.VideoWithAudioFormat;
 import me.mattstudios.holovid.Holovid;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.io.File;
@@ -26,11 +27,18 @@ public final class YouTubeDownloader extends VideoDownloader {
     }
 
     public void download0(final Player player, final URL videoUrl, final boolean interlace) {
-        // Gets the video ID
-        final String id = videoUrl.getQuery().substring(2);
         try {
-            final RequestVideoInfo reqest = new RequestVideoInfo(id);
-            final Response<VideoInfo> response = downloader.getVideoInfo(reqest);
+            // Gets the video ID
+            String id;
+            Bukkit.broadcastMessage(videoUrl.getHost());
+            if (videoUrl.getHost().equalsIgnoreCase("youtu.be")){
+                id = videoUrl.getPath().substring(1);
+            }else{
+                id = videoUrl.getQuery().substring(2);
+            }
+
+            final RequestVideoInfo request = new RequestVideoInfo(id);
+            final Response<VideoInfo> response = downloader.getVideoInfo(request);
             final VideoInfo videoInfo = response.data();
 
             final File outputDir = getOutputDirForTitle(videoInfo.details().title());
@@ -49,7 +57,7 @@ public final class YouTubeDownloader extends VideoDownloader {
 
             // Gets the format to use on the download (this one has been the only one to work so far)
             final List<VideoWithAudioFormat> videoWithAudioFormats = videoInfo.videoWithAudioFormats();
-            //This is set to 1 because YouTube's lowest quality uses some weird codec which Jcodec does not understand
+            //This is set to 1 instead of 0 because YouTube's lowest quality uses some weird codec which Jcodec does not understand
             final VideoWithAudioFormat format = videoWithAudioFormats.get(1);
 
             // Downloads the video into the videos dir
