@@ -21,7 +21,7 @@ allprojects {
     dependencies {
 
         // Paper
-        compileOnly 'io.papermc.paper:paper-api:1.18.2-R0.1-SNAPSHOT'
+        compileOnly 'io.papermc.paper:paper-api:1.19.1-R0.1-SNAPSHOT'
         // ProtocolLib
         compileOnly "com.comphenix.protocol:ProtocolLib:4.8.0"
 
@@ -33,7 +33,7 @@ allprojects {
 
         implementation "commons-validator:commons-validator:1.7"
 
-        implementation "com.github.sealedtx:java-youtube-downloader:3.0.2"
+        implementation "com.github.sealedtx:java-youtube-downloader:3.2.3"
 
         implementation "org.jcodec:jcodec:0.2.5"
         implementation "org.jcodec:jcodec-android:0.2.5"
