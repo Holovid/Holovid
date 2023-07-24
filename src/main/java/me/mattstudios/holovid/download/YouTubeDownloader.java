@@ -27,16 +27,14 @@ public final class YouTubeDownloader extends VideoDownloader {
     }
 
     public void download0(final Player player, final URL videoUrl, final boolean interlace) {
+        // Gets the video ID
+        String id;
+        if (videoUrl.getHost().equalsIgnoreCase("youtu.be")){
+            id = videoUrl.getPath().substring(1);
+        }else{
+            id = videoUrl.getQuery().substring(2);
+        }
         try {
-            // Gets the video ID
-            String id;
-            Bukkit.broadcastMessage(videoUrl.getHost());
-            if (videoUrl.getHost().equalsIgnoreCase("youtu.be")){
-                id = videoUrl.getPath().substring(1);
-            }else{
-                id = videoUrl.getQuery().substring(2);
-            }
-
             final RequestVideoInfo request = new RequestVideoInfo(id);
             final Response<VideoInfo> response = downloader.getVideoInfo(request);
             final VideoInfo videoInfo = response.data();
