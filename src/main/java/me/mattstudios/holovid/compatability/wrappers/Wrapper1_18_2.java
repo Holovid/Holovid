@@ -1,7 +1,5 @@
 package me.mattstudios.holovid.compatability.wrappers;
 
-import org.bukkit.Bukkit;
-
 import java.lang.reflect.Field;
 import java.util.concurrent.atomic.AtomicInteger;
 
