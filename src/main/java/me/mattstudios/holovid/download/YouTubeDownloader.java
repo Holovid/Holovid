@@ -49,7 +49,7 @@ public final class YouTubeDownloader extends VideoDownloader {
 
             // Gets the format to use on the download (this one has been the only one to work so far)
             final List<VideoWithAudioFormat> videoWithAudioFormats = videoInfo.videoWithAudioFormats();
-            //This is set to 1 because youtube's lowest quality uses some weird codec which Jcodec does not understand
+            //This is set to 1 because YouTube's lowest quality uses some weird codec which Jcodec does not understand
             final VideoWithAudioFormat format = videoWithAudioFormats.get(1);
 
             // Downloads the video into the videos dir
@@ -64,7 +64,7 @@ public final class YouTubeDownloader extends VideoDownloader {
 
             // Calculates how many frames the video has
             final List<VideoFormat> videoQuality = videoInfo.videoFormats();
-            final int fps = videoQuality.get(0).fps();
+            final int fps = videoQuality.get(1).fps();
             final int frames = fps * videoInfo.details().lengthSeconds();
             final boolean prepareAudio = frames / fps < Holovid.MAX_SECONDS_FOR_AUDIO;
             saveDataAndPlay(player, videoFile, videoUrl, outputDir, prepareAudio, frames, fps, interlace);
