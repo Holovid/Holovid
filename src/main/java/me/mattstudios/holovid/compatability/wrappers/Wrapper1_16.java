@@ -12,7 +12,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Wrapper1_16 implements CompatibilityWrapper {

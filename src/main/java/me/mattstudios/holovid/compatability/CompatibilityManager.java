@@ -32,7 +32,14 @@ public class CompatibilityManager {
             Wrapper1_17.class,
             Wrapper1_17_1.class,
             Wrapper1_18_1.class,
-            Wrapper1_18_2.class
+            Wrapper1_18_2.class,
+            Wrapper1_19.class,
+            Wrapper1_19_1.class,
+            Wrapper1_19_2.class,
+            Wrapper1_19_3.class,
+            Wrapper1_19_4.class,
+            Wrapper1_20.class,
+            Wrapper1_20_1.class
     );
 
     public CompatibilityManager(ProtocolManager manager, Holovid holovid){

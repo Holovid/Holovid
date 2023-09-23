@@ -8,6 +8,7 @@ import com.github.kiulian.downloader.model.videos.VideoInfo;
 import com.github.kiulian.downloader.model.videos.formats.VideoFormat;
 import com.github.kiulian.downloader.model.videos.formats.VideoWithAudioFormat;
 import me.mattstudios.holovid.Holovid;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.io.File;
@@ -27,10 +28,15 @@ public final class YouTubeDownloader extends VideoDownloader {
 
     public void download0(final Player player, final URL videoUrl, final boolean interlace) {
         // Gets the video ID
-        final String id = videoUrl.getQuery().substring(2);
+        String id;
+        if (videoUrl.getHost().equalsIgnoreCase("youtu.be")){
+            id = videoUrl.getPath().substring(1);
+        }else{
+            id = videoUrl.getQuery().substring(2);
+        }
         try {
-            final RequestVideoInfo reqest = new RequestVideoInfo(id);
-            final Response<VideoInfo> response = downloader.getVideoInfo(reqest);
+            final RequestVideoInfo request = new RequestVideoInfo(id);
+            final Response<VideoInfo> response = downloader.getVideoInfo(request);
             final VideoInfo videoInfo = response.data();
 
             final File outputDir = getOutputDirForTitle(videoInfo.details().title());
@@ -49,7 +55,8 @@ public final class YouTubeDownloader extends VideoDownloader {
 
             // Gets the format to use on the download (this one has been the only one to work so far)
             final List<VideoWithAudioFormat> videoWithAudioFormats = videoInfo.videoWithAudioFormats();
-            final VideoWithAudioFormat format = videoWithAudioFormats.get(0);
+            //This is set to 1 instead of 0 because YouTube's lowest quality uses some weird codec which Jcodec does not understand
+            final VideoWithAudioFormat format = videoWithAudioFormats.get(1);
 
             // Downloads the video into the videos dir
             final RequestVideoFileDownload download = new RequestVideoFileDownload(format)
@@ -57,12 +64,13 @@ public final class YouTubeDownloader extends VideoDownloader {
 
             final Response<File> downloadedVideo = downloader.downloadVideoFile(download);
 
+
             // Rename for easier access
             Files.move(downloadedVideo.data().toPath(), videoFile.toPath());
 
             // Calculates how many frames the video has
             final List<VideoFormat> videoQuality = videoInfo.videoFormats();
-            final int fps = videoQuality.get(0).fps();
+            final int fps = videoQuality.get(1).fps();
             final int frames = fps * videoInfo.details().lengthSeconds();
             final boolean prepareAudio = frames / fps < Holovid.MAX_SECONDS_FOR_AUDIO;
             saveDataAndPlay(player, videoFile, videoUrl, outputDir, prepareAudio, frames, fps, interlace);
